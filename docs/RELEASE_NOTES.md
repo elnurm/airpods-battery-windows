@@ -1,10 +1,13 @@
-# 0.2.2 — Automatic broadcast recovery
+# 0.2.3 — Update notifications
 
 Download the portable Windows x64 ZIP, extract it, and run AirPods.exe. Keep AirPods.ico alongside the executable. Exit the previous version from its tray menu before starting this version.
 
-- Select your broadcast once per app session. After its address expires, the app automatically chooses a sole fresh broadcast of the same model after five seconds of observation.
-- Multiple matching models require manual selection. If another matching model appears after automatic selection, the app clears that selection.
-- Changing the Windows Bluetooth device resets the model preference. Signal strength is not used to choose a pair.
+- Check GitHub Releases at startup and daily, including preview versions with a Windows ZIP.
+- Receive one notification per newer version; click it to open the release page. Installation remains manual.
+- Use **Check for updates** or **GitHub releases** in the tray menu at any time.
+- Automatic checks stay quiet while offline. GitHub receives your IP address and app version, but no Bluetooth or battery data. Notification history is saved locally.
+
+Older versions do not contain the updater: install this version manually to receive future update notifications.
 
 Automatic matching cannot verify ownership: a single matching broadcast could belong to someone else. Nearby broadcasts still show last-seen time and signal strength and expire after two minutes without updates.
 

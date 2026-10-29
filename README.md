@@ -82,7 +82,11 @@ GitHub Actions is configured to build, run decoder/connection tests, and produce
 
 ## Privacy
 
-The app makes no web requests and sends no telemetry. It reads nearby Bluetooth advertisements locally. Battery values and device selections are held in memory. The optional `--diagnose` mode writes packet counts and errors beside the executable; it does not intentionally log raw packets or addresses. Error details may contain local paths, so review logs before sharing them.
+The app checks this project's public GitHub Releases API at startup and once every 24 hours while running. You can also choose **Check for updates** from the tray menu. Checks include preview releases with a Windows ZIP. A notification opens the release page; downloading and installing remain manual. Automatic notifications appear once per new version. Windows notification settings may suppress them; the tray menu also includes **GitHub releases**.
+
+Update checks send GitHub your IP address and the app version in the User-Agent header, but no Bluetooth addresses, device names or battery data. No authentication token is used and the app sends no telemetry. The last notified version is saved in `%LOCALAPPDATA%\AirPodsBattery\notified-version.txt` to avoid repeating notifications after restarting. Offline or failed automatic checks stay quiet and retry at the next daily check.
+
+Bluetooth advertisements are read locally. Battery values and device selections are held in memory. The optional `--diagnose` mode writes packet counts and errors beside the executable and does not check for updates; it does not intentionally log raw packets or addresses. Error details may contain local paths, so review logs before sharing them.
 
 ## Contributing and license
 

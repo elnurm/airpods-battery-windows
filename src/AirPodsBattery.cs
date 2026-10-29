@@ -40,6 +40,9 @@ internal sealed class BatteryWindow : Form {
     int packets, apple, cases, pro;
     string error = "";
     bool quitting;
+    bool checkingUpdates;
+    DateTime nextUpdateCheck=DateTime.MinValue;
+    string updateBalloonUrl;
     public BatteryWindow(bool diag) {
         diagnostic=diag;
         Text="AirPods Battery"; ClientSize=new Size(400,656); FormBorderStyle=FormBorderStyle.FixedSingle; MaximizeBox=false;
@@ -89,6 +92,9 @@ internal sealed class BatteryWindow : Form {
         tray.Icon=Icon; tray.Text="AirPods: waiting for battery data"; tray.Visible=!diag;
         var menu=new ContextMenuStrip(); menu.Items.Add("Show battery",null,delegate { Show(); WindowState=FormWindowState.Normal; Activate(); });
         menu.Items.Add("Restart scan",null,delegate { Restart(); }); menu.Items.Add("Exit",null,delegate { quitting=true; Close(); });
+        menu.Items.Insert(2,new ToolStripMenuItem("Check for updates",null,delegate {CheckForUpdates(true);}));
+        menu.Items.Insert(3,new ToolStripMenuItem("GitHub releases",null,delegate {OpenRelease(UpdateChecker.ReleasesUrl);}));
+        tray.BalloonTipClicked+=delegate {if(updateBalloonUrl!=null)OpenRelease(updateBalloonUrl);};
         tray.ContextMenuStrip=menu; tray.DoubleClick += delegate { Show(); Activate(); };
         FormClosing += delegate(object sender,FormClosingEventArgs e) { if(!quitting && !diagnostic && e.CloseReason==CloseReason.UserClosing) { e.Cancel=true; Hide(); } };
         watcher.ScanningMode=BluetoothLEScanningMode.Passive;
@@ -101,10 +107,11 @@ internal sealed class BatteryWindow : Form {
             picker.Invalidate();
             if(pairedDevice!=null) { try { SetConnected(pairedDevice.ConnectionStatus==BluetoothConnectionStatus.Connected); } catch { SetConnected(null); } }
             TryAutomaticSelection(DateTime.UtcNow);
+            if(!diagnostic && DateTime.UtcNow>=nextUpdateCheck)CheckForUpdates(false);
             RefreshReadings();
             if(diagnostic && (DateTime.UtcNow-started).TotalSeconds>=20) { SaveDiagnostic(); quitting=true; Close(); }
         };
-        Shown += delegate { if(previewMode) return; LoadPairedDevices(); Restart(); timer.Start(); if(diagnostic) Hide(); };
+        Shown += delegate { if(previewMode) return; LoadPairedDevices(); Restart(); timer.Start(); if(diagnostic) Hide(); else CheckForUpdates(false); };
         RefreshReadings();
     }
     async void LoadPairedDevices() {
@@ -119,6 +126,32 @@ internal sealed class BatteryWindow : Form {
             if(matches==1) pairedPicker.SelectedItem=onlyAirPods;
         } catch {connectionError="Unable to check Bluetooth connection. Try Rescan."; SetConnected(null);}
         finally {loadingPaired=false; if(!IsDisposed) RefreshReadings();}
+    }
+    async void CheckForUpdates(bool manual) {
+        if(checkingUpdates || diagnostic || previewMode)return;
+        checkingUpdates=true;nextUpdateCheck=DateTime.UtcNow.AddDays(1);
+        try {
+            var version=await UpdateChecker.Check();
+            if(IsDisposed || Disposing)return;
+            if(version==null) {
+                if(manual)MessageBox.Show(this,"You have the latest downloadable version ("+UpdateChecker.Current.ToString(3)+").","Check for updates",MessageBoxButtons.OK,MessageBoxIcon.Information);
+                return;
+            }
+            string url=UpdateChecker.Url(version);
+            if(manual) {
+                if(MessageBox.Show(this,"AirPods Battery "+version.ToString(3)+" is available. Open the release page?","Update available",MessageBoxButtons.YesNo,MessageBoxIcon.Information)==DialogResult.Yes)OpenRelease(url);
+            } else if(UpdateChecker.ShouldNotify(version)) {
+                updateBalloonUrl=url;
+                tray.ShowBalloonTip(8000,"AirPods Battery update available","Version "+version.ToString(3)+" is available. Click to open the download page.",ToolTipIcon.Info);
+                UpdateChecker.MarkNotified(version);
+            }
+        } catch {
+            if(manual && !IsDisposed && !Disposing)MessageBox.Show(this,"Could not check GitHub for updates. Check your internet connection and try again later.","Check for updates",MessageBoxButtons.OK,MessageBoxIcon.Information);
+        } finally {checkingUpdates=false;}
+    }
+    void OpenRelease(string url) {
+        try {System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) {UseShellExecute=true});}
+        catch {MessageBox.Show(this,"Could not open your browser. Visit github.com/elnurm/airpods-battery-windows/releases.","GitHub releases",MessageBoxButtons.OK,MessageBoxIcon.Information);}
     }
     async void BindPairedDevice() {
         int generation=++pairingGeneration;
@@ -155,7 +188,7 @@ internal sealed class BatteryWindow : Form {
         bool? previous=connection.Connected;
         bool notify=connection.Update(connected,DateTime.UtcNow);
         if(previous!=connected || connected!=true) ClearReadings();
-        if(notify && !diagnostic) tray.ShowBalloonTip(5000,"AirPods disconnected","Your AirPods disconnected from this PC. Battery readings have been cleared.",ToolTipIcon.Info);
+        if(notify && !diagnostic) {updateBalloonUrl=null;tray.ShowBalloonTip(5000,"AirPods disconnected","Your AirPods disconnected from this PC. Battery readings have been cleared.",ToolTipIcon.Info);}
         RefreshReadings();
     }
     void SetSettingsVisible(bool visible) {
@@ -283,7 +316,7 @@ internal sealed class BatteryWindow : Form {
     }
     [STAThread] static int Main(string[] args) {
         if(args.Length>0 && args[0]=="--assets") { Artwork.SaveIcon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"AirPods.ico")); return 0; }
-        if(args.Length>0 && args[0]=="--test") {try {Decoder.Test(); ConnectionState.Test(); File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"tests.txt"),"Decoder and connection-transition tests passed."); return 0;} catch {return 1;}}
+        if(args.Length>0 && args[0]=="--test") {try {Decoder.Test(); ConnectionState.Test(); UpdateChecker.Test(); File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"tests.txt"),"Decoder, connection-transition and update selection tests passed."); return 0;} catch {return 1;}}
         Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
         if(args.Length>0 && args[0]=="--test-ui") {
             previewMode=true;

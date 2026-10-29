@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.3 — Update notifications
+
+- Check public GitHub releases at startup and daily, including downloadable previews.
+- Notify once per newer version, with a click opening its release page.
+- Add manual update checks and a releases link to the tray menu.
+- Keep automatic checks quiet on network failures; document network requests and local notification state.
+
 ## 0.2.2 — Automatic broadcast recovery
 
 - Remember the manually selected model for the current session and automatically recover a sole fresh matching broadcast after five seconds.

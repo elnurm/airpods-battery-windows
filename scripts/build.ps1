@@ -6,7 +6,7 @@ $framework = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319'
 $metadata = Join-Path $env:WINDIR 'System32\WinMetadata'
 $output = Join-Path $projectRoot 'build'
 New-Item -ItemType Directory -Force $output | Out-Null
-$assemblies = @('System.dll','System.Core.dll','System.Drawing.dll','System.Windows.Forms.dll','System.Runtime.dll','System.Runtime.InteropServices.WindowsRuntime.dll','System.Runtime.WindowsRuntime.dll','System.ObjectModel.dll')
+$assemblies = @('System.dll','System.Web.Extensions.dll','System.Core.dll','System.Drawing.dll','System.Windows.Forms.dll','System.Runtime.dll','System.Runtime.InteropServices.WindowsRuntime.dll','System.Runtime.WindowsRuntime.dll','System.ObjectModel.dll')
 $references = $assemblies | ForEach-Object { '/r:' + (Join-Path $framework $_) }
 $references += @('Windows.Foundation.winmd','Windows.Devices.winmd','Windows.Storage.winmd') | ForEach-Object { '/r:' + (Join-Path $metadata $_) }
 if (!(Test-Path "$framework\csc.exe") -or !(Test-Path "$metadata\Windows.Devices.winmd")) { throw 'Build requires 64-bit Windows with .NET Framework and Windows WinMetadata.' }
