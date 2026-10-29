@@ -7,8 +7,17 @@ internal sealed class Reading {
     public DateTime[] Updated = new DateTime[3];
     public ulong Address;
     public short Rssi;
+    public DateTime LastSeen = DateTime.MinValue;
+    public const int ExpireAfterSeconds = 120;
+    public bool IsExpired(DateTime now) { return (now-LastSeen).TotalSeconds>=ExpireAfterSeconds; }
+    public string SeenLabel(DateTime now) {
+        int seconds=(int)Math.Max(0,(now-LastSeen).TotalSeconds);
+        return seconds<5?"Seen just now":seconds<60?"Last seen "+seconds+"s ago":"Last seen "+(seconds/60)+"m ago";
+    }
+    public string SignalLabel { get {return Rssi>=-127 && Rssi<=0?Rssi+" dBm":"signal unavailable";} }
     public int ModelId=Models.TestedModel;
-    public override string ToString() { return Models.Label(ModelId)+" · "+Address.ToString("X12"); }
+    public string IdentityLabel {get {return Models.Label(ModelId)+" · "+Address.ToString("X12");}}
+    public override string ToString() { return IdentityLabel+" · "+SeenLabel(DateTime.UtcNow)+" · "+SignalLabel; }
 }
 internal sealed class PairedChoice {
     public DeviceInformation Device;
@@ -44,6 +53,10 @@ internal static class Decoder {
         b[3]=0x27;b[1]=17;Check(Parse(b)==null);b[1]=25;
         Check(Parse(new byte[19])==null); Check(Parse(new byte[0])==null);
         for(int i=0;i<16;i++) Check(Level(i)==(i<=10?i*10:-1));
+        var now=DateTime.UtcNow;var seen=new Reading {LastSeen=now,Rssi=-48};
+        Check(!seen.IsExpired(now.AddSeconds(119)));Check(seen.IsExpired(now.AddSeconds(120)));
+        Check(seen.SeenLabel(now)=="Seen just now");Check(seen.SeenLabel(now.AddSeconds(30))=="Last seen 30s ago");
+        Check(seen.SignalLabel=="-48 dBm");seen.Rssi=127;Check(seen.SignalLabel=="signal unavailable");
     }
     static void Check(bool ok) { if(!ok) throw new Exception("Decoder test failed"); }
 }

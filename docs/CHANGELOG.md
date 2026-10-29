@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1 — Nearby broadcast cleanup
+
+- Remove nearby broadcast entries after two minutes without a supported battery broadcast.
+- Show last-seen time and signal strength in each entry.
+- Clear an expired selection and open Device settings without silently switching to another pair.
+
 ## 0.2.0 — Companion design
 
 - Light macOS-inspired Companion layout, original earbud artwork and native Windows window controls.

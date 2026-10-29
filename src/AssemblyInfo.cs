@@ -5,5 +5,5 @@ using System.Reflection;
 [assembly: AssemblyProduct("AirPods Battery for Windows")]
 [assembly: AssemblyCompany("Elnur Mammadov")]
 [assembly: AssemblyCopyright("Copyright (c) 2026 Elnur Mammadov")]
-[assembly: AssemblyVersion("0.2.0.0")]
-[assembly: AssemblyFileVersion("0.2.0.0")]
+[assembly: AssemblyVersion("0.2.1.0")]
+[assembly: AssemblyFileVersion("0.2.1.0")]

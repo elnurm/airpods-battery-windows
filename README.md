@@ -53,7 +53,7 @@ Using an experimental model? [Report whether it works](https://github.com/elnurm
 
 **Why two selectors?** AirPods rotate their BLE address. This version cannot authenticate the broadcast as belonging to the Windows device, so you choose both. Use it away from other AirPods when selecting, and choose the new broadcast if the address changes. It does not silently merge nearby pairs. If the two selectors refer to different pairs, the connection status and battery readings will not describe the same device.
 
-**Old readings:** while Windows still reports a connection, a missing broadcast is treated as missing battery data, not proof of a disconnect. Readings older than 60 seconds are muted and labeled Last known. Their age is available on hover or keyboard focus.
+**Old readings:** while Windows still reports a connection, a missing broadcast is treated as missing battery data, not proof of a disconnect. Readings older than 60 seconds are muted and labeled Last known. Their age is available on hover or keyboard focus. Broadcast entries show their last-seen time and signal strength (dBm), and disappear after two minutes without a supported battery broadcast. If the selected entry expires, its battery display clears and Device settings opens for a new selection. Signal strength does not establish which pair is yours.
 
 ## Troubleshooting
 
