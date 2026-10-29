@@ -20,7 +20,10 @@ internal sealed class BatteryWindow : Form {
     bool loadingPaired;
     string connectionError="";
     readonly Label status = new Label();
-    readonly Label[] values = new Label[2];
+    readonly BatteryGauge[] values = new BatteryGauge[2];
+    readonly System.Windows.Forms.Panel settings = new System.Windows.Forms.Panel();
+    readonly Button settingsToggle = new Button();
+    readonly Label deviceTitle = new Label();
     readonly Label[] ages = new Label[2];
     readonly int[] levels = {-1,-1};
     readonly bool[] fresh = new bool[2];
@@ -33,35 +36,41 @@ internal sealed class BatteryWindow : Form {
     bool quitting;
     public BatteryWindow(bool diag) {
         diagnostic=diag;
-        Text="AirPods Battery"; ClientSize=new Size(520,572); FormBorderStyle=FormBorderStyle.FixedSingle; MaximizeBox=false;
-        AutoScaleMode=AutoScaleMode.Dpi; DoubleBuffered=true; StartPosition=FormStartPosition.CenterScreen;
-        BackColor=Artwork.Background; ForeColor=Color.FromArgb(242,245,249); Font=new Font("Segoe UI",10);
-        Controls.Add(new Label { Text="YOUR EVERYDAY AUDIO", ForeColor=Artwork.Muted, Font=new Font("Segoe UI",8,FontStyle.Bold), Location=new Point(28,26), AutoSize=true });
-        Controls.Add(new Label { Text="AirPods Battery", Font=new Font("Segoe UI",25,FontStyle.Bold), Location=new Point(24,46), AutoSize=true });
-        pairedPicker.SetBounds(28,100,464,30); pairedPicker.DropDownStyle=ComboBoxStyle.DropDownList;
-        pairedPicker.DisplayMember="Name"; pairedPicker.BackColor=Artwork.Card; pairedPicker.ForeColor=ForeColor;
-        pairedPicker.AccessibleName="Windows Bluetooth device to monitor";
-        pairedPicker.SelectedIndexChanged+=delegate { BindPairedDevice(); }; Controls.Add(pairedPicker);
-        picker.SetBounds(28,140,464,32); picker.DropDownStyle=ComboBoxStyle.DropDownList;
-        picker.FlatStyle=FlatStyle.Flat; picker.BackColor=Artwork.Card; picker.ForeColor=ForeColor; picker.AccessibleName="Select your AirPods";
-        picker.DrawMode=DrawMode.OwnerDrawFixed; picker.ItemHeight=25;
-        picker.DrawItem+=delegate(object sender,DrawItemEventArgs e) {
-            using(var b=new SolidBrush(Artwork.Card)) e.Graphics.FillRectangle(b,e.Bounds);
-            string text=e.Index<0?"Choose your AirPods":picker.Items[e.Index].ToString();
-            TextRenderer.DrawText(e.Graphics,text,Font,new Rectangle(e.Bounds.X+8,e.Bounds.Y,e.Bounds.Width-12,e.Bounds.Height),ForeColor,TextFormatFlags.VerticalCenter|TextFormatFlags.EndEllipsis);
-            if((e.State & DrawItemState.Focus)!=0) e.DrawFocusRectangle();
-        };
-        picker.SelectedIndexChanged += delegate { RefreshReadings(); }; Controls.Add(picker);
-        string[] names={"LEFT EAR","RIGHT EAR"};
+        Text="AirPods Battery"; ClientSize=new Size(400,636); FormBorderStyle=FormBorderStyle.FixedSingle; MaximizeBox=false;
+        AutoScaleDimensions=new SizeF(96,96); AutoScaleMode=AutoScaleMode.Dpi;
+        DoubleBuffered=true; StartPosition=FormStartPosition.CenterScreen;
+        BackColor=Artwork.Background; ForeColor=Color.FromArgb(31,32,35); Font=new Font("Segoe UI",10);
+        deviceTitle.Text="AirPods Battery";deviceTitle.Font=new Font("Segoe UI",22,FontStyle.Bold);
+        deviceTitle.SetBounds(20,24,360,42);deviceTitle.TextAlign=ContentAlignment.MiddleCenter;Controls.Add(deviceTitle);
+        status.SetBounds(24,72,352,38);status.Font=new Font("Segoe UI",9);status.ForeColor=Artwork.Muted;status.TextAlign=ContentAlignment.TopCenter;Controls.Add(status);
+        string[] names={"Left earbud","Right earbud"};
         for(int i=0;i<2;i++) {
-            int x=28+i*240;
-            Controls.Add(new Label {Text=names[i], ForeColor=Artwork.Muted, BackColor=Artwork.Card,Font=new Font("Segoe UI",9,FontStyle.Bold),Location=new Point(x+20,210),AutoSize=true});
-            values[i]=new Label {Text="—", BackColor=Artwork.Card,Font=new Font("Segoe UI",30,FontStyle.Bold),Location=new Point(x+16,344),Size=new Size(185,60)}; Controls.Add(values[i]);
-            ages[i]=new Label {Text="Waiting for a reading",ForeColor=Artwork.Muted,BackColor=Artwork.Card,Font=new Font("Segoe UI",9),Location=new Point(x+20,435),Size=new Size(185,22)}; Controls.Add(ages[i]);
+            int x=24+i*184;
+            Controls.Add(new Label {Text=names[i],ForeColor=Artwork.Muted,BackColor=Artwork.Card,Font=new Font("Segoe UI",9),Location=new Point(x+20,266),AutoSize=true});
+            values[i]=new BatteryGauge {Text="—",Location=new Point(x+20,292),Size=new Size(116,50),AccessibleName=names[i]+" battery"};Controls.Add(values[i]);
+            ages[i]=new Label {Text="Waiting for data",ForeColor=Artwork.Muted,BackColor=Artwork.Card,Font=new Font("Segoe UI",8),Location=new Point(x+20,357),Size=new Size(136,25)};Controls.Add(ages[i]);
         }
-        status.SetBounds(28,484,464,25); status.Font=new Font("Segoe UI",9); status.ForeColor=Artwork.Muted; Controls.Add(status);
-        Controls.Add(new Label {Text="Battery estimates · updated as your earbuds report",ForeColor=Artwork.Muted,Font=new Font("Segoe UI",8),Location=new Point(28,536),AutoSize=true});
-        var rescan=new Button {Text="Rescan",FlatStyle=FlatStyle.Flat,ForeColor=Artwork.Mint,BackColor=Artwork.Background,Location=new Point(420,526),Size=new Size(72,30),TabIndex=1}; rescan.FlatAppearance.BorderSize=0; rescan.Click+=delegate {Restart();}; Controls.Add(rescan);
+        Controls.Add(new Label {Text="Approximate battery levels",ForeColor=Artwork.Muted,Font=new Font("Segoe UI",8),Location=new Point(24,418),AutoSize=true});
+        var rescan=new Button {Text="Rescan",FlatStyle=FlatStyle.Flat,ForeColor=ForeColor,BackColor=Artwork.Card,Location=new Point(304,408),Size=new Size(72,30)};
+        rescan.FlatAppearance.BorderColor=Color.FromArgb(222,223,228);rescan.Click+=delegate {Restart();};Controls.Add(rescan);
+        settingsToggle.Text="Hide device settings";settingsToggle.SetBounds(24,456,352,30);settingsToggle.FlatStyle=FlatStyle.Flat;
+        settingsToggle.FlatAppearance.BorderSize=0;settingsToggle.TextAlign=ContentAlignment.MiddleLeft;settingsToggle.ForeColor=Artwork.Muted;
+        settingsToggle.Click+=delegate {SetSettingsVisible(!settings.Visible);};Controls.Add(settingsToggle);
+        settings.SetBounds(24,496,352,124);settings.BackColor=BackColor;Controls.Add(settings);
+        settings.Controls.Add(new Label {Text="Windows Bluetooth device",ForeColor=Artwork.Muted,Font=new Font("Segoe UI",8),Location=new Point(0,0),AutoSize=true});
+        pairedPicker.SetBounds(0,22,352,28);pairedPicker.DropDownStyle=ComboBoxStyle.DropDownList;pairedPicker.DisplayMember="Name";
+        pairedPicker.BackColor=Artwork.Card;pairedPicker.ForeColor=ForeColor;pairedPicker.AccessibleName="Windows Bluetooth device to monitor";
+        pairedPicker.SelectedIndexChanged+=delegate {BindPairedDevice();};settings.Controls.Add(pairedPicker);
+        settings.Controls.Add(new Label {Text="Nearby battery broadcast",ForeColor=Artwork.Muted,Font=new Font("Segoe UI",8),Location=new Point(0,65),AutoSize=true});
+        picker.SetBounds(0,87,352,28);picker.DropDownStyle=ComboBoxStyle.DropDownList;picker.BackColor=Artwork.Card;picker.ForeColor=ForeColor;picker.AccessibleName="Select your AirPods";
+        picker.DrawMode=DrawMode.OwnerDrawFixed;picker.ItemHeight=23;
+        picker.DrawItem+=delegate(object sender,DrawItemEventArgs e) {
+            using(var brush=new SolidBrush(Artwork.Card)) e.Graphics.FillRectangle(brush,e.Bounds);
+            string text=e.Index<0?"Choose your AirPods":picker.Items[e.Index].ToString();
+            TextRenderer.DrawText(e.Graphics,text,Font,new Rectangle(e.Bounds.X+6,e.Bounds.Y,e.Bounds.Width-12,e.Bounds.Height),ForeColor,TextFormatFlags.VerticalCenter|TextFormatFlags.EndEllipsis);
+            if((e.State&DrawItemState.Focus)!=0)e.DrawFocusRectangle();
+        };
+        picker.SelectedIndexChanged+=delegate {RefreshReadings();if(picker.SelectedItem!=null) SetSettingsVisible(false);};settings.Controls.Add(picker);
         string iconPath=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"AirPods.ico");
         if(File.Exists(iconPath)) Icon=new Icon(iconPath);
         tray.Icon=Icon; tray.Text="AirPods: waiting for battery data"; tray.Visible=!diag;
@@ -131,16 +140,22 @@ internal sealed class BatteryWindow : Form {
         if(notify && !diagnostic) tray.ShowBalloonTip(5000,"AirPods disconnected","Your AirPods disconnected from this PC. Battery readings have been cleared.",ToolTipIcon.Info);
         RefreshReadings();
     }
+    void SetSettingsVisible(bool visible) {
+        float scale=ClientSize.Width/400f;
+        settings.Visible=visible;settingsToggle.Text=visible?"Hide device settings":"Device settings";
+        ClientSize=new Size(ClientSize.Width,(int)((visible?636:500)*scale));
+        Invalidate();
+    }
     protected override void OnPaint(PaintEventArgs e) {
-        base.OnPaint(e); var g=e.Graphics; g.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-        g.ScaleTransform(ClientSize.Width/520f,ClientSize.Height/572f);
-        Artwork.Earbud(g,434,30,32,false); Artwork.Earbud(g,462,30,32,true);
+        base.OnPaint(e);var g=e.Graphics;g.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+        float scale=ClientSize.Width/400f;g.ScaleTransform(scale,scale);
+        Artwork.Earbud(g,94,121,102,false);Artwork.Earbud(g,204,121,102,true);
         for(int i=0;i<2;i++) {
-            int x=28+i*240; Artwork.Box(g,Artwork.Card,x,192,224,280,20);
-            Artwork.Earbud(g,x+69,243,88,i==1);
-            Artwork.Box(g,Color.FromArgb(49,57,68),x+20,414,184,6,3);
-            if(levels[i]>0) Artwork.Box(g,fresh[i]?(levels[i]<=20?Color.FromArgb(255,185,111):Artwork.Mint):Artwork.Muted,x+20,414,Math.Max(6,184*levels[i]/100),6,3);
+            int x=24+i*184;
+            Artwork.Box(g,Color.FromArgb(235,235,239),x,250,168,148,20);
+            Artwork.Box(g,Artwork.Card,x,248,168,148,20);
         }
+        using(var pen=new Pen(Color.FromArgb(225,225,230)))g.DrawLine(pen,24,450,376,450);
     }
     void Dispatch(Action action) { if(!IsDisposed && IsHandleCreated) { try { BeginInvoke(action); } catch(InvalidOperationException) {} } }
     void Received(BluetoothLEAdvertisementWatcher sender,BluetoothLEAdvertisementReceivedEventArgs e) {
@@ -175,24 +190,29 @@ internal sealed class BatteryWindow : Form {
     void RefreshReadings() {
         var r=picker.SelectedItem as Reading;
         if(connection.Connected!=true) r=null;
+        deviceTitle.Text=r==null?"AirPods Battery":Models.Names[r.ModelId];
         string[] tips={"L —","R —"};
         for(int i=0;i<2;i++) {
             levels[i]=r==null?-1:r.Level[i]; fresh[i]=false;
-            if(r==null || r.Level[i]<0) {values[i].Text="—"; values[i].ForeColor=ForeColor; ages[i].Text=connection.Connected==false?"Disconnected":connection.Connected==null?"Checking connection":"Waiting for a reading"; continue;}
+            values[i].Level=levels[i];values[i].Fresh=false;
+            if(r==null || r.Level[i]<0) {values[i].Text="—"; values[i].ForeColor=ForeColor; ages[i].Text=connection.Connected==false?"Disconnected":connection.Connected==null?"Checking connection":"Waiting for data";values[i].Detail=ages[i].Text;values[i].AccessibleDescription=ages[i].Text;values[i].Invalidate();continue;}
             int age=(int)(DateTime.UtcNow-r.Updated[i]).TotalSeconds;
             bool stale=age>60;
             fresh[i]=!stale;
-            values[i].Text="~"+r.Level[i]+"%";
+            values[i].Text=r.Level[i]+"%";values[i].Fresh=!stale;
             values[i].ForeColor=stale?Artwork.Muted:ForeColor;
-            ages[i].Text=(r.Charging[i]?"Charging · ":"")+(stale?"Last seen ":"")+(age<60?age+"s":(age/60)+"m")+" ago";
+            ages[i].Text=stale?"Last known":r.Charging[i]?"Charging":"";
+            values[i].Detail="Approximately "+r.Level[i]+"%"+(r.Charging[i]?" · charging":"")+"\nUpdated "+(age<60?age+" seconds":(age/60)+" minutes")+" ago"+(stale?" (last known)":"");
+            values[i].AccessibleDescription=values[i].Detail;values[i].Invalidate();
             tips[i]="LRC"[i]+" ~"+r.Level[i]+"%"+(stale?" old":"");
         }
         tray.Text=r==null?"AirPods: select a detected pair":string.Join(" | ",tips);
-        status.Text=error.Length>0?error:(r==null?(devices.Count==0?"Searching for your AirPods…":"Select your nearby pair above"):(fresh[0]||fresh[1]?"●  Receiving battery updates":"Waiting for updates · rescan or select your pair again"));
+        status.Text=error.Length>0?error:(r==null?(devices.Count==0?"Searching for your AirPods…":"Select your nearby pair above"):(fresh[0]||fresh[1]?"●  Connected to this PC":"Waiting for updates · rescan or select your pair again"));
         if(connection.Connected!=true) {
             status.Text=connectionError.Length>0?connectionError:connection.Connected==false?"AirPods disconnected · reconnect in Windows":pairedPicker.SelectedItem==null?"Select your Windows AirPods device in the top list":"Checking Bluetooth connection…";
             tray.Text=connection.Connected==false?"AirPods disconnected":"AirPods: connection not verified";
         }
+        status.ForeColor=connection.Connected==true && error.Length==0?Artwork.Mint:Artwork.Muted;
         Invalidate();
     }
     void SaveDiagnostic() {
@@ -213,14 +233,25 @@ internal sealed class BatteryWindow : Form {
                 w.Show(); Application.DoEvents(); w.SetConnected(true);
                 var r=new Reading {Address=1};r.Level[0]=80;r.Level[1]=70;r.Updated[0]=r.Updated[1]=DateTime.UtcNow;
                 w.devices.Add(1,r);w.picker.Items.Add(r);w.picker.SelectedIndex=0;w.RefreshReadings();
-                if(w.values[0].Text!="~80%") throw new Exception("Connected display test failed");
+                if(w.values[0].Text!="80%" || w.ages[0].Text!="" || !w.values[0].Detail.Contains("Updated")) throw new Exception("Connected display test failed");
                 using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height));b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"screenshot.png"));}
+                r.Updated[0]=DateTime.UtcNow.AddMinutes(-3);w.RefreshReadings();
+                if(w.ages[0].Text!="Last known" || w.values[0].Fresh || !w.values[0].Detail.Contains("3 minutes"))throw new Exception("Stale reading visibility test failed");
+                using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height));b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"stale-preview.png"));}
+                w.SetSettingsVisible(true);if(!w.settings.Visible || w.ClientSize.Height<=500)throw new Exception("Settings expansion failed");
+                w.SetSettingsVisible(false);
                 w.SetConnected(false);
                 if(w.values[0].Text!="—" || w.values[1].Text!="—" || w.levels[0]!=-1 || w.levels[1]!=-1 || r.Level[0]!=-1 || w.tray.Text!="AirPods disconnected") throw new Exception("Disconnect clearing test failed");
                 using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height));b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"disconnected-preview.png"));}
                 w.SetConnected(true); if(w.values[0].Text!="—") throw new Exception("Reconnect reused cached battery");
                 w.SetConnected(null); if(w.values[0].Text!="—") throw new Exception("Unknown connection leaked reading");
-                File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"ui-tests.txt"),"Connected display, disconnect clearing, empty bars and tray, reconnect cache reset, and unknown state passed.");w.Close();
+                w.SetSettingsVisible(true);
+                foreach(float factor in new float[] {1.25f,1.2f}) {
+                    w.Scale(new SizeF(factor,factor));Application.DoEvents();
+                    if(w.settings.Bottom>w.ClientSize.Height || w.values[1].Right>w.ClientSize.Width)throw new Exception("Scaled layout clipped");
+                }
+                using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height));b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"scaled-settings-preview.png"));}
+                File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"ui-tests.txt"),"Battery icon display, fresh hover timestamps, stale labels, settings toggle, disconnect clearing, reconnect cache reset, and unknown state passed.");w.Close();
             } return 0;
         }
         if(args.Length>0 && args[0]=="--preview") {

@@ -1,13 +1,15 @@
-# 0.1.0 — first preview
+# 0.2.0 — Companion design
 
-AirPods Battery for Windows brings approximate left/right battery levels to a small Windows 11 tray app.
+Download the portable Windows x64 ZIP, extract it, and run AirPods.exe. Keep AirPods.ico alongside the executable. Exit version 0.1.0 from its tray menu before starting this version.
 
-- Original earbud illustrations and mint app icon.
-- Charging state and per-earbud reading age.
-- Windows connection monitoring: clear readings on disconnect, request one notification, and wait for fresh values on reconnect.
-- AirPods Pro 3 battery reception tested on one Windows 11 PC.
-- Other recognized AirPods earbuds enabled experimentally; please submit compatibility reports.
+- Light Companion layout with original earbud illustrations and rounded cards.
+- iPhone-style battery indicators with percentages inside.
+- Hover or keyboard-focus a battery indicator to see when it updated.
+- Stale readings still show Last known; disconnecting clears the values.
+- Expandable device settings and a model-aware heading.
 
-This is an unsigned early preview for Windows 11 x64. Readings use 10% steps. Case battery, AirPods Max, exact 1% readings, automatic identity matching, and automatic startup are not included. Select the paired Windows device and its nearby battery broadcast separately.
+This remains an unsigned community preview for Windows 11 x64. Battery estimates use 10% steps. AirPods Pro 3 battery reception has been tested on one PC; eight other recognized earbud variants are experimental. Case battery and AirPods Max are not included.
 
-Automated decoder, connection, and UI tests pass locally. CI and complete real-device disconnect/reconnect notification delivery still need release validation. See the README for limitations and troubleshooting.
+Local decoder, connection-transition, UI state and scaled-layout checks pass. Bluetooth scanning and connection monitoring are unchanged. Real-device behavior varies with firmware and adapter; community feedback is welcome.
+
+[Report compatibility](https://github.com/elnurm/airpods-battery-windows/issues/new?template=compatibility.yml)

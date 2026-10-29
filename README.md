@@ -13,10 +13,10 @@ Built for everyday listening on a Windows PC. **Tested with AirPods Pro 3; other
 ## Features
 
 - Separate left and right earbud battery estimates and charging indicators.
-- Compact dark window, original earbud illustrations, and a matching tray icon.
+- Light Companion window, iPhone-style battery indicators, and a matching tray icon.
 - Clears percentages when the selected Windows Bluetooth device disconnects.
 - Requests one notification per disconnect; waits for fresh data after reconnecting.
-- Shows the age of each reading, so an old percentage is not presented as fresh.
+- Hover or keyboard-focus a battery indicator for its update time. Old readings visibly show Last known.
 - Portable Windows app. No account, internet connection, custom drivers, or installer.
 
 ## Download and use
@@ -25,8 +25,8 @@ Get the portable ZIP from [GitHub Releases](https://github.com/elnurm/airpods-ba
 
 1. Extract the ZIP and run **AirPods.exe**. Keep **AirPods.ico** alongside it.
 2. Pair and connect your AirPods using Windows Bluetooth settings.
-3. In the **top dropdown**, select the Windows Bluetooth device to monitor. A single paired device named AirPods is selected automatically; renamed devices can be selected manually.
-4. In the **lower dropdown**, select your nearby AirPods battery broadcast. Opening the case near the PC can help discovery.
+3. Expand **Device settings**. In the **Windows Bluetooth device** dropdown, select the Windows Bluetooth device to monitor. A single paired device named AirPods is selected automatically; renamed devices can be selected manually.
+4. In the **Nearby battery broadcast** dropdown, select your nearby AirPods battery broadcast. Opening the case near the PC can help discovery.
 5. Close the window to keep it in the tray. Double-click the tray icon to reopen it; right-click → **Exit** to quit.
 
 Exit any previous copy before opening a new version. The release is unsigned; code signing is not included in this early community release.
@@ -47,13 +47,13 @@ Using an experimental model? [Report whether it works](https://github.com/elnurm
 
 ## What to expect
 
-**Battery precision:** this app reads the unencrypted Bluetooth Low Energy proximity broadcast. Values are approximate **10% steps**, shown with `~`. It does not extract encryption keys or provide exact 1% readings. Case battery is intentionally omitted.
+**Battery precision:** this app reads the unencrypted Bluetooth Low Energy proximity broadcast. Values are approximate **10% steps**, identified as approximate in the footer (and with `~` in the tray). It does not extract encryption keys or provide exact 1% readings. Case battery is intentionally omitted.
 
 **Connection vs. proximity:** a nearby AirPods broadcast does not mean the headphones are connected to Windows. The app separately checks the selected paired Windows device's connection state. A disconnect clears the stored percentages and bars; broadcasts received while disconnected cannot restore them. Windows may delay reporting the change, and Do Not Disturb or notification preferences may suppress the popup.
 
 **Why two selectors?** AirPods rotate their BLE address. This version cannot authenticate the broadcast as belonging to the Windows device, so you choose both. Use it away from other AirPods when selecting, and choose the new broadcast if the address changes. It does not silently merge nearby pairs. If the two selectors refer to different pairs, the connection status and battery readings will not describe the same device.
 
-**Old readings:** while Windows still reports a connection, a missing broadcast is treated as missing battery data, not proof of a disconnect. Readings older than 60 seconds are dimmed and labeled with their age.
+**Old readings:** while Windows still reports a connection, a missing broadcast is treated as missing battery data, not proof of a disconnect. Readings older than 60 seconds are muted and labeled Last known. Their age is available on hover or keyboard focus.
 
 ## Troubleshooting
 
