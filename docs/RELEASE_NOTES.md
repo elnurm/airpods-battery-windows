@@ -1,10 +1,12 @@
-# 0.2.1 — Nearby broadcast cleanup
+# 0.2.2 — Automatic broadcast recovery
 
 Download the portable Windows x64 ZIP, extract it, and run AirPods.exe. Keep AirPods.ico alongside the executable. Exit the previous version from its tray menu before starting this version.
 
-- Nearby broadcasts show last-seen time and signal strength.
-- Entries expire after two minutes without a supported battery broadcast, preventing old addresses from accumulating.
-- If the selected entry expires, battery values clear and Device settings opens. The app never silently switches to another pair.
+- Select your broadcast once per app session. After its address expires, the app automatically chooses a sole fresh broadcast of the same model after five seconds of observation.
+- Multiple matching models require manual selection. If another matching model appears after automatic selection, the app clears that selection.
+- Changing the Windows Bluetooth device resets the model preference. Signal strength is not used to choose a pair.
+
+Automatic matching cannot verify ownership: a single matching broadcast could belong to someone else. Nearby broadcasts still show last-seen time and signal strength and expire after two minutes without updates.
 
 This remains an unsigned community preview for Windows 11 x64. Battery estimates use 10% steps. AirPods Pro 3 battery reception has been tested on one PC; eight other recognized earbud variants are experimental. Case battery and AirPods Max are not included.
 

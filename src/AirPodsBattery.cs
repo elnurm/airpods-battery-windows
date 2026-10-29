@@ -20,6 +20,10 @@ internal sealed class BatteryWindow : Form {
     bool loadingPaired;
     bool pruning;
     bool broadcastExpired;
+    int? preferredModel;
+    Reading automaticCandidate;
+    DateTime candidateSince;
+    bool automaticSelection;
     string connectionError="";
     readonly Label status = new Label();
     readonly BatteryGauge[] values = new BatteryGauge[2];
@@ -76,7 +80,10 @@ internal sealed class BatteryWindow : Form {
             if((e.State&DrawItemState.Focus)!=0)e.DrawFocusRectangle();
         };
         picker.SelectedIndexChanged+=delegate {if(!pruning) {if(picker.SelectedItem!=null)broadcastExpired=false;RefreshReadings();}};
-        picker.SelectionChangeCommitted+=delegate {if(picker.SelectedItem!=null) SetSettingsVisible(false);};settings.Controls.Add(picker);
+        picker.SelectionChangeCommitted+=delegate {
+            var chosen=picker.SelectedItem as Reading;
+            if(chosen!=null) {preferredModel=chosen.ModelId;automaticSelection=false;automaticCandidate=null;SetSettingsVisible(false);}
+        };settings.Controls.Add(picker);
         string iconPath=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"AirPods.ico");
         if(File.Exists(iconPath)) Icon=new Icon(iconPath);
         tray.Icon=Icon; tray.Text="AirPods: waiting for battery data"; tray.Visible=!diag;
@@ -93,6 +100,7 @@ internal sealed class BatteryWindow : Form {
             PruneBroadcasts(DateTime.UtcNow);
             picker.Invalidate();
             if(pairedDevice!=null) { try { SetConnected(pairedDevice.ConnectionStatus==BluetoothConnectionStatus.Connected); } catch { SetConnected(null); } }
+            TryAutomaticSelection(DateTime.UtcNow);
             RefreshReadings();
             if(diagnostic && (DateTime.UtcNow-started).TotalSeconds>=20) { SaveDiagnostic(); quitting=true; Close(); }
         };
@@ -114,6 +122,8 @@ internal sealed class BatteryWindow : Form {
     }
     async void BindPairedDevice() {
         int generation=++pairingGeneration;
+        preferredModel=null;automaticCandidate=null;automaticSelection=false;broadcastExpired=false;
+        picker.SelectedIndex=-1;
         if(pairedDevice!=null) {pairedDevice.ConnectionStatusChanged-=ConnectionChanged; pairedDevice.Dispose(); pairedDevice=null;}
         connection.Reset(); ClearReadings(); RefreshReadings();
         var choice=pairedPicker.SelectedItem as PairedChoice; if(choice==null) return;
@@ -182,6 +192,26 @@ internal sealed class BatteryWindow : Form {
         } finally {picker.EndUpdate();pruning=false;}
         RefreshReadings();
     }
+    void TryAutomaticSelection(DateTime now) {
+        if(connection.Connected!=true || !preferredModel.HasValue || error.Length>0) {automaticCandidate=null;return;}
+        if(picker.SelectedItem!=null && !automaticSelection) return;
+        Reading only=null;int matches=0;
+        foreach(var r in devices.Values) {
+            if(r.ModelId==preferredModel.Value && !r.IsExpired(now)) {only=r;matches++;}
+        }
+        if(matches!=1) {
+            automaticCandidate=null;
+            if(automaticSelection) {picker.SelectedIndex=-1;automaticSelection=false;broadcastExpired=true;SetSettingsVisible(true);}
+            return;
+        }
+        if(picker.SelectedItem==only)return;
+        if((now-only.LastSeen).TotalSeconds>30 || (only.Level[0]<0 && only.Level[1]<0)) {automaticCandidate=null;return;}
+        // Observe a sole matching model for five seconds before choosing it.
+        // Model matching is a convenience heuristic, not authenticated identity.
+        if(automaticCandidate!=only) {automaticCandidate=only;candidateSince=now;return;}
+        if((now-candidateSince).TotalSeconds<5)return;
+        automaticSelection=true;picker.SelectedItem=only;SetSettingsVisible(false);
+    }
     void Received(BluetoothLEAdvertisementWatcher sender,BluetoothLEAdvertisementReceivedEventArgs e) {
         var decoded=new List<Reading>(); int apples=0, encrypted=0;
         foreach(var m in e.Advertisement.ManufacturerData) {
@@ -197,7 +227,7 @@ internal sealed class BatteryWindow : Form {
             foreach(var r in decoded) {
                 pro++; Reading previous;
                 if(!devices.TryGetValue(r.Address,out previous)) {
-                    // Never auto-select or merge rotating addresses: identity is not authenticated.
+                    // Keep addresses separate; automatic selection only uses a sole matching model.
                     if(devices.Count>=100) continue;
                     previous=new Reading {Address=r.Address,ModelId=r.ModelId,LastSeen=e.Timestamp.UtcDateTime,Rssi=r.Rssi}; devices.Add(r.Address,previous); picker.Items.Add(previous);
                 }
@@ -235,7 +265,7 @@ internal sealed class BatteryWindow : Form {
         }
         tray.Text=r==null?"AirPods: select a detected pair":string.Join(" | ",tips);
         status.Text=error.Length>0?error:(r==null?(devices.Count==0?"Searching for your AirPods…":"Select your nearby pair above"):(fresh[0]||fresh[1]?"●  Connected to this PC":"Waiting for updates · rescan or select your pair again"));
-        if(broadcastExpired && connection.Connected==true && error.Length==0)status.Text="Previous broadcast expired. Choose a recent entry in Device settings.";
+        if(broadcastExpired && connection.Connected==true && error.Length==0)status.Text="Searching for a unique matching broadcast… Multiple matches? Choose in Device settings.";
         if(connection.Connected!=true) {
             status.Text=connectionError.Length>0?connectionError:connection.Connected==false?"AirPods disconnected · reconnect in Windows":pairedPicker.SelectedItem==null?"Select your Windows AirPods device in the top list":"Checking Bluetooth connection…";
             tray.Text=connection.Connected==false?"AirPods disconnected":"AirPods: connection not verified";
@@ -283,6 +313,23 @@ internal sealed class BatteryWindow : Form {
                 if(w.devices.ContainsKey(2) || w.picker.SelectedItem!=r || w.picker.Items.Count!=2)throw new Exception("Expiry changed a live selection");
                 r.LastSeen=now.AddSeconds(-120);w.PruneBroadcasts(now);
                 if(w.picker.SelectedIndex!=-1 || w.values[0].Text!="—" || !w.broadcastExpired || !w.settings.Visible || !w.devices.ContainsKey(3))throw new Exception("Expired selection switched to another pair");
+                w.preferredModel=current.ModelId;
+                w.TryAutomaticSelection(now);w.TryAutomaticSelection(now.AddSeconds(6));
+                if(w.picker.SelectedItem!=null)throw new Exception("Auto selection while connection unknown");
+                w.SetConnected(true);current.Level[0]=70;current.Updated[0]=now;
+                w.TryAutomaticSelection(now);
+                if(w.picker.SelectedItem!=null)throw new Exception("Auto selection skipped observation period");
+                w.TryAutomaticSelection(now.AddSeconds(6));
+                if(w.picker.SelectedItem!=current || w.values[0].Text!="70%" || w.settings.Visible)throw new Exception("Unique model not selected automatically");
+                var other=new Reading {Address=4,LastSeen=now,ModelId=current.ModelId};
+                w.devices.Add(4,other);w.picker.Items.Add(other);w.TryAutomaticSelection(now.AddSeconds(7));
+                if(w.picker.SelectedItem!=null || w.values[0].Text!="—")throw new Exception("Ambiguous automatic selection retained");
+                other.ModelId=0x0220;
+                w.TryAutomaticSelection(now.AddSeconds(8));w.TryAutomaticSelection(now.AddSeconds(14));
+                if(w.picker.SelectedItem!=current)throw new Exception("Different model blocked unique match");
+                w.picker.SelectedIndex=-1;w.automaticSelection=false;w.automaticCandidate=null;current.LastSeen=now.AddSeconds(-60);
+                w.TryAutomaticSelection(now);w.TryAutomaticSelection(now.AddSeconds(6));
+                if(w.picker.SelectedItem!=null)throw new Exception("Stale candidate selected automatically");
                 w.SetSettingsVisible(true);
                 foreach(float factor in new float[] {1.25f,1.2f}) {
                     w.Scale(new SizeF(factor,factor));Application.DoEvents();

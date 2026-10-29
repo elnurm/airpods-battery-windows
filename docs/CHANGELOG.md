@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2 — Automatic broadcast recovery
+
+- Remember the manually selected model for the current session and automatically recover a sole fresh matching broadcast after five seconds.
+- Require manual selection when multiple matching models are nearby; clear an automatic selection if it becomes ambiguous.
+- Reset the model preference when changing the Windows Bluetooth device.
+
 ## 0.2.1 — Nearby broadcast cleanup
 
 - Remove nearby broadcast entries after two minutes without a supported battery broadcast.
