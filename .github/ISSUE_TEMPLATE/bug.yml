@@ -1,0 +1,27 @@
+name: Bug report
+description: Report a problem with battery readings or the app.
+title: "[Bug] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Expected and actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: input
+    id: setup
+    attributes:
+      label: App version, Windows version, and AirPods model
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional details
+      description: Remove personal device names, Bluetooth addresses, and local account paths before sharing screenshots or logs.

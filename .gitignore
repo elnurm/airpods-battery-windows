@@ -1,0 +1,12 @@
+/build/
+/dist/
+/.vs/
+*.user
+*.suo
+*.log
+error.txt
+diagnostic.txt
+tests.txt
+ui-tests.txt
+Thumbs.db
+Desktop.ini

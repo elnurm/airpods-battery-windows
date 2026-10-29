@@ -1,0 +1,39 @@
+name: AirPods compatibility report
+description: Tell us which AirPods and Windows setup works or needs help.
+title: "[Compatibility] "
+body:
+  - type: input
+    id: model
+    attributes:
+      label: AirPods model
+      placeholder: AirPods Pro 2 USB-C
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Windows version and app version
+      placeholder: Windows 11 24H2, app 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware and Bluetooth adapter (if known)
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Overall result
+      options:
+        - Works
+        - Partly works
+        - Does not work
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: What did you test?
+      description: Include left/right readings, charging, disconnect clearing, notification, and reconnect. Do not include serial numbers, Bluetooth addresses, or pairing keys.
+    validations:
+      required: true
