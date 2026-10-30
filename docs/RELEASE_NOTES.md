@@ -1,13 +1,13 @@
-# 0.2.3 — Update notifications
+# 0.2.4 — AirPods model filter
 
 Download the portable Windows x64 ZIP, extract it, and run AirPods.exe. Keep AirPods.ico alongside the executable. Exit the previous version from its tray menu before starting this version.
 
-- Check GitHub Releases at startup and daily, including preview versions with a Windows ZIP.
-- Receive one notification per newer version; click it to open the release page. Installation remains manual.
-- Use **Check for updates** or **GitHub releases** in the tray menu at any time.
-- Automatic checks stay quiet while offline. GitHub receives your IP address and app version, but no Bluetooth or battery data. Notification history is saved locally.
+- Selecting a nearby broadcast hides other AirPods models for the current session, including new broadcasts received later.
+- Enable **Show all AirPods models** in Device settings to select a different model. Selecting a broadcast reapplies the filter.
+- Nearby pairs of the same model remain visible; filtering does not verify ownership.
+- README badges show Windows build status, latest release, release asset downloads, contribution information, and the MIT license.
 
-Older versions do not contain the updater: install this version manually to receive future update notifications.
+Version 0.2.3 and later can notify you of this update. Earlier versions require a manual download. Installation remains manual in all versions.
 
 Automatic matching cannot verify ownership: a single matching broadcast could belong to someone else. Nearby broadcasts still show last-seen time and signal strength and expire after two minutes without updates.
 

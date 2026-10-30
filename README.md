@@ -2,6 +2,14 @@
 
 # AirPods Battery for Windows
 
+<p align="center">
+  <a href="https://github.com/elnurm/airpods-battery-windows/actions/workflows/build.yml"><img src="https://github.com/elnurm/airpods-battery-windows/actions/workflows/build.yml/badge.svg?branch=main" alt="Windows build and tests"></a>
+  <a href="https://github.com/elnurm/airpods-battery-windows/releases"><img src="https://img.shields.io/github/v/release/elnurm/airpods-battery-windows?include_prereleases&amp;sort=semver&amp;label=release" alt="Latest release including previews"></a>
+  <a href="https://github.com/elnurm/airpods-battery-windows/releases"><img src="https://img.shields.io/github/downloads/elnurm/airpods-battery-windows/total?label=asset%20downloads" alt="Total release asset downloads"></a>
+  <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="Pull requests welcome"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
+</p>
+
 **See your AirPods battery level on Windows 11, right from the system tray.** A small, free, open-source desktop app showing left and right earbud percentages, charging state, and disconnect notifications.
 
 Built for everyday listening on a Windows PC. **Tested with AirPods Pro 3; other recognized AirPods earbuds are enabled experimentally.** Community compatibility reports are welcome.
@@ -52,6 +60,8 @@ Using an experimental model? [Report whether it works](https://github.com/elnurm
 **Connection vs. proximity:** a nearby AirPods broadcast does not mean the headphones are connected to Windows. The app separately checks the selected paired Windows device's connection state. A disconnect clears the stored percentages and bars; broadcasts received while disconnected cannot restore them. Windows may delay reporting the change, and Do Not Disturb or notification preferences may suppress the popup.
 
 **Why two selectors?** AirPods rotate their BLE address. This version cannot authenticate the broadcast as belonging to the Windows device, so you choose both. Use it away from other AirPods when selecting, and choose the new broadcast if the address changes. After you manually choose a broadcast, the app remembers its model for this session. When that address expires, it automatically selects a sole matching model after five seconds of observation, provided its battery broadcast is fresh. Multiple matching models require manual selection; a second match also clears an automatic selection. Changing the Windows device resets the remembered model. This is a convenience heuristic: even a single matching broadcast may belong to someone else. If the two selectors refer to different pairs, the connection status and battery readings will not describe the same device.
+
+**Model filter:** selecting a nearby broadcast hides other AirPods models for the current session. Enable **Show all AirPods models** in Device settings to choose a different model. Choosing a broadcast applies the filter again. Other pairs of the same model remain visible; this filter does not verify ownership.
 
 **Old readings:** while Windows still reports a connection, a missing broadcast is treated as missing battery data, not proof of a disconnect. Readings older than 60 seconds are muted and labeled Last known. Their age is available on hover or keyboard focus. Broadcast entries show their last-seen time and signal strength (dBm), and disappear after two minutes without a supported battery broadcast. If the selected entry expires, its battery display clears and Device settings opens for a new selection. Signal strength does not establish which pair is yours.
 

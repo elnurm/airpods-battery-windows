@@ -14,7 +14,7 @@ foreach ($directory in @('assets','docs')) {
     New-Item -ItemType Directory -Force (Join-Path $stage $directory) | Out-Null
     Copy-Item -Path "$projectRoot\$directory\*" -Destination (Join-Path $stage $directory) -Force
 }
-$archive = Join-Path $dist 'airpods-battery-windows-0.2.3-win-x64.zip'
+$archive = Join-Path $dist 'airpods-battery-windows-0.2.4-win-x64.zip'
 Compress-Archive -Path "$stage\*" -DestinationPath $archive -Force
 $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
 [IO.File]::WriteAllText("$archive.sha256", "$hash  $([IO.Path]::GetFileName($archive))`n")

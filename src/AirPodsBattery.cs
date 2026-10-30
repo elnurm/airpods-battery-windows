@@ -14,6 +14,7 @@ internal sealed class BatteryWindow : Form {
     readonly Dictionary<ulong,Reading> devices = new Dictionary<ulong,Reading>();
     readonly ComboBox picker = new ComboBox();
     readonly ComboBox pairedPicker = new ComboBox();
+    readonly CheckBox showAllModels = new CheckBox();
     readonly ConnectionState connection = new ConnectionState();
     BluetoothDevice pairedDevice;
     int pairingGeneration;
@@ -65,7 +66,11 @@ internal sealed class BatteryWindow : Form {
         settingsToggle.Text="Hide device settings";settingsToggle.SetBounds(24,456,352,30);settingsToggle.FlatStyle=FlatStyle.Flat;
         settingsToggle.FlatAppearance.BorderSize=0;settingsToggle.TextAlign=ContentAlignment.MiddleLeft;settingsToggle.ForeColor=Artwork.Muted;
         settingsToggle.Click+=delegate {SetSettingsVisible(!settings.Visible);};Controls.Add(settingsToggle);
-        settings.SetBounds(24,496,352,144);settings.BackColor=BackColor;Controls.Add(settings);
+        settings.SetBounds(24,496,352,168);settings.BackColor=BackColor;Controls.Add(settings);
+        showAllModels.Text="Show all AirPods models";showAllModels.SetBounds(0,140,352,24);
+        showAllModels.Font=new Font("Segoe UI",8);showAllModels.ForeColor=Artwork.Muted;
+        showAllModels.CheckedChanged+=delegate {FilterBroadcasts();};settings.Controls.Add(showAllModels);
+        ClientSize=new Size(400,680);
         settings.Controls.Add(new Label {Text="Windows Bluetooth device",ForeColor=Artwork.Muted,Font=new Font("Segoe UI",8),Location=new Point(0,0),AutoSize=true});
         pairedPicker.SetBounds(0,22,352,28);pairedPicker.DropDownStyle=ComboBoxStyle.DropDownList;pairedPicker.DisplayMember="Name";
         pairedPicker.BackColor=Artwork.Card;pairedPicker.ForeColor=ForeColor;pairedPicker.AccessibleName="Windows Bluetooth device to monitor";
@@ -85,7 +90,7 @@ internal sealed class BatteryWindow : Form {
         picker.SelectedIndexChanged+=delegate {if(!pruning) {if(picker.SelectedItem!=null)broadcastExpired=false;RefreshReadings();}};
         picker.SelectionChangeCommitted+=delegate {
             var chosen=picker.SelectedItem as Reading;
-            if(chosen!=null) {preferredModel=chosen.ModelId;automaticSelection=false;automaticCandidate=null;SetSettingsVisible(false);}
+            if(chosen!=null) {preferredModel=chosen.ModelId;automaticSelection=false;automaticCandidate=null;showAllModels.Checked=false;FilterBroadcasts();SetSettingsVisible(false);}
         };settings.Controls.Add(picker);
         string iconPath=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"AirPods.ico");
         if(File.Exists(iconPath)) Icon=new Icon(iconPath);
@@ -157,6 +162,7 @@ internal sealed class BatteryWindow : Form {
         int generation=++pairingGeneration;
         preferredModel=null;automaticCandidate=null;automaticSelection=false;broadcastExpired=false;
         picker.SelectedIndex=-1;
+        FilterBroadcasts();
         if(pairedDevice!=null) {pairedDevice.ConnectionStatusChanged-=ConnectionChanged; pairedDevice.Dispose(); pairedDevice=null;}
         connection.Reset(); ClearReadings(); RefreshReadings();
         var choice=pairedPicker.SelectedItem as PairedChoice; if(choice==null) return;
@@ -194,7 +200,7 @@ internal sealed class BatteryWindow : Form {
     void SetSettingsVisible(bool visible) {
         float scale=ClientSize.Width/400f;
         settings.Visible=visible;settingsToggle.Text=visible?"Hide device settings":"Device settings";
-        ClientSize=new Size(ClientSize.Width,(int)((visible?656:500)*scale));
+        ClientSize=new Size(ClientSize.Width,(int)((visible?680:500)*scale));
         Invalidate();
     }
     protected override void OnPaint(PaintEventArgs e) {
@@ -209,6 +215,19 @@ internal sealed class BatteryWindow : Form {
         using(var pen=new Pen(Color.FromArgb(225,225,230)))g.DrawLine(pen,24,450,376,450);
     }
     void Dispatch(Action action) { if(!IsDisposed && IsHandleCreated) { try { BeginInvoke(action); } catch(InvalidOperationException) {} } }
+    bool VisibleBroadcast(Reading reading) {
+        return !preferredModel.HasValue || showAllModels.Checked || reading.ModelId==preferredModel.Value;
+    }
+    void FilterBroadcasts() {
+        var selected=picker.SelectedItem as Reading;
+        pruning=true;picker.BeginUpdate();
+        try {
+            picker.Items.Clear();
+            foreach(var reading in devices.Values)if(VisibleBroadcast(reading))picker.Items.Add(reading);
+            picker.SelectedItem=selected!=null && VisibleBroadcast(selected)?selected:null;
+        } finally {picker.EndUpdate();pruning=false;}
+        RefreshReadings();
+    }
     void PruneBroadcasts(DateTime now) {
         var expired=new List<Reading>();
         foreach(var r in devices.Values) if(r.IsExpired(now)) expired.Add(r);
@@ -262,7 +281,7 @@ internal sealed class BatteryWindow : Form {
                 if(!devices.TryGetValue(r.Address,out previous)) {
                     // Keep addresses separate; automatic selection only uses a sole matching model.
                     if(devices.Count>=100) continue;
-                    previous=new Reading {Address=r.Address,ModelId=r.ModelId,LastSeen=e.Timestamp.UtcDateTime,Rssi=r.Rssi}; devices.Add(r.Address,previous); picker.Items.Add(previous);
+                    previous=new Reading {Address=r.Address,ModelId=r.ModelId,LastSeen=e.Timestamp.UtcDateTime,Rssi=r.Rssi}; devices.Add(r.Address,previous); if(VisibleBroadcast(previous))picker.Items.Add(previous);
                 }
                 previous.Rssi=r.Rssi;
                 previous.LastSeen=e.Timestamp.UtcDateTime;
@@ -358,8 +377,15 @@ internal sealed class BatteryWindow : Form {
                 w.devices.Add(4,other);w.picker.Items.Add(other);w.TryAutomaticSelection(now.AddSeconds(7));
                 if(w.picker.SelectedItem!=null || w.values[0].Text!="—")throw new Exception("Ambiguous automatic selection retained");
                 other.ModelId=0x0220;
+                w.FilterBroadcasts();
+                if(w.picker.Items.Contains(other) || !w.picker.Items.Contains(current))throw new Exception("Model filter failed");
+                w.showAllModels.Checked=true;
+                if(!w.picker.Items.Contains(other) || w.picker.SelectedItem!=null)throw new Exception("Show all models changed selection");
+                w.showAllModels.Checked=false;
                 w.TryAutomaticSelection(now.AddSeconds(8));w.TryAutomaticSelection(now.AddSeconds(14));
                 if(w.picker.SelectedItem!=current)throw new Exception("Different model blocked unique match");
+                w.FilterBroadcasts();
+                if(w.picker.SelectedItem!=current)throw new Exception("Filtering lost current selection");
                 w.picker.SelectedIndex=-1;w.automaticSelection=false;w.automaticCandidate=null;current.LastSeen=now.AddSeconds(-60);
                 w.TryAutomaticSelection(now);w.TryAutomaticSelection(now.AddSeconds(6));
                 if(w.picker.SelectedItem!=null)throw new Exception("Stale candidate selected automatically");

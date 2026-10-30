@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.4 — AirPods model filter
+
+- Hide other AirPods models after selecting a broadcast, with a Show all AirPods models option for switching pairs.
+- Add README badges for build status, releases, downloads, contributions, and license.
+
 ## 0.2.3 — Update notifications
 
 - Check public GitHub releases at startup and daily, including downloadable previews.
