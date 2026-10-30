@@ -1,6 +1,6 @@
 <p align="center"><img src="assets/AppIcon.png" width="104" alt="AirPods Battery for Windows icon"></p>
 
-# AirPods Battery for Windows
+<h1 align="center">AirPods Battery for Windows</h1>
 
 <p align="center">
   <a href="https://github.com/elnurm/airpods-battery-windows/actions/workflows/build.yml"><img src="https://github.com/elnurm/airpods-battery-windows/actions/workflows/build.yml/badge.svg?branch=main" alt="Windows build and tests"></a>
@@ -10,9 +10,9 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
 </p>
 
-**See your AirPods battery level on Windows 11, right from the system tray.** A small, free, open-source desktop app showing left and right earbud percentages, charging state, and disconnect notifications.
+<p align="center"><strong>See your AirPods battery level on Windows 11, right from the system tray.</strong><br>A small, free, open-source desktop app showing left and right earbud percentages, charging state, and disconnect notifications.</p>
 
-Built for everyday listening on a Windows PC. **Tested with AirPods Pro 3; other recognized AirPods earbuds are enabled experimentally.** Community compatibility reports are welcome.
+<p align="center">Built for everyday listening on a Windows PC.<br><strong>Tested with AirPods Pro 3; other recognized AirPods earbuds are enabled experimentally.</strong><br>Community compatibility reports are welcome.</p>
 
 ![AirPods Battery window with sample battery readings](docs/screenshot.png)
 
