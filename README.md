@@ -122,4 +122,6 @@ Your chosen interface language is stored in `%LOCALAPPDATA%\AirPodsBattery\langu
 
 ## Contributing and license
 
+More interface languages are planned. Translation suggestions and contributions are welcome; English and Russian are the currently supported languages.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for bug reports, compatibility feedback, and development notes. The project is released under the [MIT license](LICENSE). Protocol references and trademark information are in [NOTICE.md](NOTICE.md).

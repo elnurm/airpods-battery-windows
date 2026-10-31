@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1 — Translation roadmap and update-delivery test
+
+- Document plans for additional interface languages; English and Russian remain the supported languages.
+- Publish an incremented installer/update package to exercise the 0.3.0 → 0.3.1 in-app update flow. Battery behavior and updater logic are unchanged.
+
 ## 0.3.0 — Installer and in-app updates
 
 - Replace portable ZIP releases with a per-user Velopack installer and Windows uninstall support.
