@@ -1,11 +1,12 @@
 # Changelog
 
-## Unreleased
+## 0.2.5 — Russian support and window improvements
 
 - Prevent duplicate normal app processes and tray icons; a second launch shows the existing window. Diagnostic runs remain separate.
 - Add Russian translations for the interface, tray menu, tooltips, update dialogs, and notifications, with a saved English/Russian selection in the tray menu.
 - Allow resizing and maximizing the window, keeping the battery display centered and readable.
 - Keep manually enlarged windows at their chosen size when toggling Device settings; enforce a minimum size to prevent clipping.
+- Add Russian documentation, matching English/Russian screenshots, and prominent download links. Include both README files in the portable ZIP.
 
 ## 0.2.4 — AirPods model filter
 
