@@ -1,20 +1,16 @@
-# 0.2.5 — Russian support and window improvements
+# 0.3.0 — Installer and in-app updates
 
-Download the portable Windows x64 ZIP, extract it, and run AirPods.exe. Keep AirPods.ico alongside the executable. Exit the previous version from its tray menu before starting this version.
+Download **AirPodsBatteryDesktop-win-Setup.exe**, exit all previous copies through the tray, and run the installer. Open AirPods Battery for Windows from the Start menu. New releases no longer include a portable ZIP.
 
-- Russian interface, tray menu, tooltips, dialogs, and notifications. Choose **Language / Язык → Русский** from the tray menu; your preference is saved.
-- Resize or maximize the window. Content stays centered, and the minimum size keeps controls visible.
-- Reopening the app shows the existing window instead of creating a second process and tray icon. Diagnostic runs remain separate.
-- English and Russian README files, matching screenshots, and prominent download links. Both README files are included in the ZIP.
+- Per-user installation, Start menu shortcut, and Windows uninstall entry.
+- Installed copies check GitHub at startup and daily. Click a notification or use **Check for updates** to download, then confirm **Restart and update**.
+- Download progress and cancellation, package checksum verification, and refusal to downgrade.
+- English and Russian update dialogs. Existing language preferences are preserved.
 
-Before upgrading, exit every running older copy from its tray menu. Older versions do not participate in the new single-instance check.
+**Migrating from ZIP versions (0.2.5 and earlier):** install manually once. Those versions require a ZIP asset to detect a release, so they cannot notify about this installer-only release. Stop using the old extracted executable after installing.
 
-Version 0.2.3 and later can notify you of this update. Earlier versions require a manual download. Installation remains manual in all versions.
+The .nupkg and feed files under Assets are used by the updater; users only need the Setup EXE. Future releases must include the entire generated update feed alongside the installer.
 
-Automatic matching cannot verify ownership: a single matching broadcast could belong to someone else. Nearby broadcasts still show last-seen time and signal strength and expire after two minutes without updates.
+The release remains unsigned. Downloads use HTTPS from this repository and checksums detect corruption, but there is no independent publisher signature or Authenticode certificate yet.
 
-This remains an unsigned community preview for Windows 11 x64. Battery estimates use 10% steps. AirPods Pro 3 battery reception has been tested on one PC; eight other recognized earbud variants are experimental. Case battery and AirPods Max are not included.
-
-Local decoder, connection-transition, update-selection, single-instance, language-switching, UI state, resize, and scaled-layout checks pass. Bluetooth scanning and connection monitoring are unchanged. Real-device behavior varies with firmware and adapter; community feedback is welcome.
-
-[Report compatibility](https://github.com/elnurm/airpods-battery-windows/issues/new?template=compatibility.yml)
+Windows 11 x64; approximate 10% battery steps. AirPods Pro 3 tested on one PC; other recognized earbuds experimental. Case battery and AirPods Max are not included.

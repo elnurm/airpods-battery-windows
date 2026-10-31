@@ -17,8 +17,11 @@ jobs:
       - name: Build, test, and package
         shell: pwsh
         run: ./scripts/package.ps1
+      - name: Test installer update feed and package
+        shell: pwsh
+        run: ./scripts/test-installed-updates.ps1
       - uses: actions/upload-artifact@v7
         with:
           name: airpods-battery-windows-win-x64
-          path: dist/*
+          path: dist/**/*
           if-no-files-found: error

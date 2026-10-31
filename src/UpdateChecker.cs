@@ -50,7 +50,7 @@ internal static class UpdateChecker {
             if(release==null || release.draft || !TryVersion(release.tag_name,out version) || version<=current)continue;
             bool downloadable=false;
             foreach(var asset in release.assets ?? new ReleaseAsset[0])
-                if(asset!=null && asset.state=="uploaded" && asset.name=="airpods-battery-windows-"+version.ToString(3)+"-win-x64.zip")downloadable=true;
+                if(asset!=null && asset.state=="uploaded" && asset.name=="AirPodsBatteryDesktop-win-Setup.exe")downloadable=true;
             if(downloadable && (best==null || version>best))best=version;
         }
         return best;
@@ -71,7 +71,7 @@ internal static class UpdateChecker {
         try {Version version;return TryVersion(File.ReadAllText(statePath).Trim(),out version)?version:null;} catch(IOException) {return null;} catch(UnauthorizedAccessException) {return null;}
     }
     public static void Test() {
-        string asset="\"assets\":[{\"name\":\"airpods-battery-windows-0.3.0-win-x64.zip\",\"state\":\"uploaded\"}]";
+        string asset="\"assets\":[{\"name\":\"AirPodsBatteryDesktop-win-Setup.exe\",\"state\":\"uploaded\"}]";
         var current=new Version(0,2,3,0);
         if(FindNewer("[{\"tag_name\":\"v0.3.0\",\"prerelease\":true,"+asset+"}]",current)!=new Version(0,3,0,0))throw new Exception("Preview update missing");
         foreach(string entry in new [] {"{\"tag_name\":\"v0.3.0\",\"draft\":true,"+asset+"}","{\"tag_name\":\"bad\","+asset+"}","{\"tag_name\":\"v0.3.0\"}","{\"tag_name\":\"v0.2.3\","+asset+"}"})

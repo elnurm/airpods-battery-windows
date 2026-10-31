@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 — Installer and in-app updates
+
+- Replace portable ZIP releases with a per-user Velopack installer and Windows uninstall support.
+- Download updates from GitHub inside the app, verify packages, and apply after an explicit restart confirmation.
+- Include progress, cancellation, English/Russian update text, and pinned build dependencies.
+- Preserve existing language preferences and document the manual migration from ZIP versions.
+
+
 ## 0.2.5 — Russian support and window improvements
 
 - Prevent duplicate normal app processes and tray icons; a second launch shows the existing window. Diagnostic runs remain separate.

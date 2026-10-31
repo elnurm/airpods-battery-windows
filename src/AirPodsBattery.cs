@@ -48,6 +48,7 @@ internal sealed class BatteryWindow : Form {
     bool checkingUpdates;
     DateTime nextUpdateCheck=DateTime.MinValue;
     string updateBalloonUrl;
+    bool installedUpdateBalloon;
     readonly ToolStripMenuItem englishLanguage=new ToolStripMenuItem("English");
     readonly ToolStripMenuItem russianLanguage=new ToolStripMenuItem("Русский");
     public BatteryWindow(bool diag) {
@@ -110,7 +111,7 @@ internal sealed class BatteryWindow : Form {
         englishLanguage.Click+=delegate {ChangeLanguage(false,true);};
         russianLanguage.Click+=delegate {ChangeLanguage(true,true);};
         englishLanguage.Checked=!Language.Russian;russianLanguage.Checked=Language.Russian;
-        tray.BalloonTipClicked+=delegate {if(updateBalloonUrl!=null)OpenRelease(updateBalloonUrl);};
+        tray.BalloonTipClicked+=delegate {if(installedUpdateBalloon)CheckForUpdates(true);else if(updateBalloonUrl!=null)OpenRelease(updateBalloonUrl);};
         tray.ContextMenuStrip=menu; tray.DoubleClick += delegate { Show(); Activate(); };
         FormClosing += delegate(object sender,FormClosingEventArgs e) { if(!quitting && !diagnostic && e.CloseReason==CloseReason.UserClosing) { e.Cancel=true; Hide(); } };
         watcher.ScanningMode=BluetoothLEScanningMode.Passive;
@@ -160,6 +161,7 @@ internal sealed class BatteryWindow : Form {
         if(checkingUpdates || diagnostic || previewMode)return;
         checkingUpdates=true;nextUpdateCheck=DateTime.UtcNow.AddDays(1);
         try {
+            if(InstalledUpdates.IsInstalled) {await CheckInstalledUpdates(manual);return;}
             var version=await UpdateChecker.Check();
             if(IsDisposed || Disposing)return;
             if(version==null) {
@@ -177,6 +179,35 @@ internal sealed class BatteryWindow : Form {
         } catch {
             if(manual && !IsDisposed && !Disposing)MessageBox.Show(this,Language.T("Could not check GitHub for updates. Check your internet connection and try again later."),Language.T("Check for updates"),MessageBoxButtons.OK,MessageBoxIcon.Information);
         } finally {checkingUpdates=false;}
+    }
+    async System.Threading.Tasks.Task CheckInstalledUpdates(bool manual) {
+        var manager=InstalledUpdates.CreateManager();
+        var update=await manager.CheckForUpdatesAsync();
+        if(IsDisposed || Disposing)return;
+        if(update==null) {
+            if(manual)MessageBox.Show(this,Language.T("You have the latest downloadable version (")+UpdateChecker.Current.ToString(3)+").",Language.T("Check for updates"),MessageBoxButtons.OK,MessageBoxIcon.Information);
+            return;
+        }
+        var version=InstalledUpdates.VersionOf(update);
+        if(!manual) {
+            if(UpdateChecker.ShouldNotify(version)) {
+                installedUpdateBalloon=true;updateBalloonUrl=null;
+                tray.ShowBalloonTip(8000,Language.T("AirPods Battery update available"),Language.T("Version ")+version.ToString(3)+Language.T(" is available. Click to update in the app."),ToolTipIcon.Info);
+                UpdateChecker.MarkNotified(version);
+            }
+            return;
+        }
+        Show();if(WindowState==FormWindowState.Minimized)WindowState=FormWindowState.Normal;Activate();
+        if(MessageBox.Show(this,Language.T("Download version ")+version.ToString(3)+Language.T("? You can keep using the app until you choose to restart."),Language.T("Update available"),MessageBoxButtons.YesNo,MessageBoxIcon.Information)!=DialogResult.Yes)return;
+        try {
+            using(var download=new UpdateDownloadWindow())if(!await download.Download(manager,update,this))return;
+            if(IsDisposed || Disposing)return;
+            if(MessageBox.Show(this,Language.T("Update downloaded and verified. Restart now to install it?"),Language.T("Restart and update"),MessageBoxButtons.YesNo,MessageBoxIcon.Information)!=DialogResult.Yes)return;
+            manager.WaitExitThenApplyUpdates(update.TargetFullRelease,false,true);
+            quitting=true;Close();
+        } catch {
+            if(!IsDisposed && !Disposing)MessageBox.Show(this,Language.T("Update could not be completed. Your current version is still available. Try again later or use GitHub releases."),Language.T("Update failed"),MessageBoxButtons.OK,MessageBoxIcon.Warning);
+        }
     }
     void OpenRelease(string url) {
         try {System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) {UseShellExecute=true});}
@@ -218,7 +249,7 @@ internal sealed class BatteryWindow : Form {
         bool? previous=connection.Connected;
         bool notify=connection.Update(connected,DateTime.UtcNow);
         if(previous!=connected || connected!=true) ClearReadings();
-        if(notify && !diagnostic) {updateBalloonUrl=null;tray.ShowBalloonTip(5000,Language.T("AirPods disconnected"),Language.T("Your AirPods disconnected from this PC. Battery readings have been cleared."),ToolTipIcon.Info);}
+        if(notify && !diagnostic) {updateBalloonUrl=null;installedUpdateBalloon=false;tray.ShowBalloonTip(5000,Language.T("AirPods disconnected"),Language.T("Your AirPods disconnected from this PC. Battery readings have been cleared."),ToolTipIcon.Info);}
         RefreshReadings();
     }
     void SetSettingsVisible(bool visible) {
@@ -372,6 +403,7 @@ internal sealed class BatteryWindow : Form {
         base.Dispose(disposing);
     }
     [STAThread] static int Main(string[] args) {
+        Velopack.VelopackApp.Build().SetAutoApplyOnStartup(false).Run();
         if(args.Length>0 && (args[0]=="--test" || args[0]=="--test-ui"))Language.Set(false,false);
         if(args.Length>0 && args[0]=="--assets") { Artwork.SaveIcon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"AirPods.ico")); return 0; }
         if(args.Length>0 && args[0]=="--test") {try {Decoder.Test(); ConnectionState.Test(); UpdateChecker.Test(); File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"tests.txt"),"Decoder, connection-transition and update selection tests passed."); return 0;} catch {return 1;}}

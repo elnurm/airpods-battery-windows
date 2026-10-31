@@ -17,8 +17,8 @@
 <p align="center">Built for everyday listening on a Windows PC.<br><strong>Tested with AirPods Pro 3; other recognized AirPods earbuds are enabled experimentally.</strong><br>Community compatibility reports are welcome.</p>
 
 <p align="center">
-  <a href="https://github.com/elnurm/airpods-battery-windows/releases"><img src="https://img.shields.io/badge/Download_for_Windows_11-ZIP-28a77b?style=for-the-badge" alt="Download AirPods Battery for Windows 11 (ZIP)"></a><br>
-  Choose the Windows x64 ZIP under Assets on the release page.
+  <a href="https://github.com/elnurm/airpods-battery-windows/releases"><img src="https://img.shields.io/badge/Download_for_Windows_11-Installer-28a77b?style=for-the-badge" alt="Download AirPods Battery for Windows 11 installer"></a><br>
+  Choose AirPodsBatteryDesktop-win-Setup.exe under Assets on the release page.
 </p>
 
 <table align="center">
@@ -41,19 +41,23 @@
 - Clears percentages when the selected Windows Bluetooth device disconnects.
 - Requests one notification per disconnect; waits for fresh data after reconnecting.
 - Hover or keyboard-focus a battery indicator for its update time. Old readings visibly show Last known.
-- Portable Windows app. No account, custom drivers, or installer. Battery monitoring works offline; update checks use the internet.
+- Per-user installer, Start menu shortcut, and uninstall support. No account or custom drivers. Battery monitoring works offline; updates use the internet.
 
 ## Download and use
 
-Get the portable ZIP from [GitHub Releases](https://github.com/elnurm/airpods-battery-windows/releases). If no release has been published yet, use the build instructions below.
+Get **AirPodsBatteryDesktop-win-Setup.exe** from [GitHub Releases](https://github.com/elnurm/airpods-battery-windows/releases). Starting with 0.3.0, releases are installer-only. The `.nupkg` and JSON files are used by the updater; you do not need to open them.
 
-1. Extract the ZIP and run **AirPods.exe**. Keep **AirPods.ico** alongside it.
+1. Exit any old copy through its tray menu, run the setup program, and open **AirPods Battery for Windows** from the Start menu.
 2. Pair and connect your AirPods using Windows Bluetooth settings.
 3. Expand **Device settings**. In the **Windows Bluetooth device** dropdown, select the Windows Bluetooth device to monitor. A single paired device named AirPods is selected automatically; renamed devices can be selected manually.
 4. In the **Nearby battery broadcast** dropdown, select your nearby AirPods battery broadcast. Opening the case near the PC can help discovery.
 5. Close the window to keep it in the tray. Double-click the tray icon to reopen it; right-click → **Exit** to quit.
 
 Exit any previous copy before opening a new version. The release is unsigned; code signing is not included in this early community release.
+
+**Moving from a portable ZIP:** versions up to 0.2.5 only detect releases containing a ZIP. They cannot notify you about this installer-only migration. Download and run the installer manually once, then stop using the old extracted executable. Your language preference remains in `%LOCALAPPDATA%\AirPodsBattery`; the installed app lives separately under `%LOCALAPPDATA%\AirPodsBatteryDesktop`. Uninstall through Windows Settings → Apps.
+
+**In-app updates:** click an update notification or choose **Check for updates** in the tray menu. Confirm the download, then choose whether to restart and install. Cancelling a download leaves the current app running. Declining restart keeps the downloaded package; check for updates again when ready. Updates are not automatically applied on startup.
 
 ## Compatibility
 
@@ -102,15 +106,15 @@ On a Windows 11 x64 machine, open PowerShell in the repository root:
 ./scripts/package.ps1
 ```
 
-The build uses the Windows .NET Framework compiler and system WinRT metadata. No package download is required. The executable is written to `build/AirPods.exe`; packaging produces a portable ZIP and SHA-256 checksum under `dist/`. Close a running build before rebuilding it.
+The build uses the Windows .NET Framework compiler and system WinRT metadata. The first build downloads pinned, checksum-verified Velopack and Newtonsoft.Json dependencies. Packaging also downloads a private .NET runtime and Velopack CLI into `build/dependencies`; no machine-wide SDK install is needed. The executable is written to `build/AirPods.exe`; packaging produces the installer, full update package, feed metadata and `SHA256SUMS.txt` under `dist/v<version>/`. Close a running build before rebuilding it. See [release publishing](docs/UPDATES.md).
 
 GitHub Actions is configured to build, run decoder/connection tests, and produce downloadable build artifacts. It does not publish releases automatically. Hardware Bluetooth tests require a real PC and AirPods; hosted CI cannot establish device compatibility.
 
 ## Privacy
 
-The app checks this project's public GitHub Releases API at startup and once every 24 hours while running. You can also choose **Check for updates** from the tray menu. Checks include preview releases with a Windows ZIP. A notification opens the release page; downloading and installing remain manual. Automatic notifications appear once per new version. Windows notification settings may suppress them; the tray menu also includes **GitHub releases**.
+The installed app checks this project's public GitHub Releases API at startup and once every 24 hours while running, including preview releases with a Windows update feed. **Check for updates** also checks manually. A notification opens the in-app update flow. Downloading and restarting require your confirmation. Automatic notifications appear once per new version. Windows notification settings may suppress them; **GitHub releases** opens the manual installer download page.
 
-Update checks send GitHub your IP address and the app version in the User-Agent header, but no Bluetooth addresses, device names or battery data. No authentication token is used and the app sends no telemetry. The last notified version is saved in `%LOCALAPPDATA%\AirPodsBattery\notified-version.txt` to avoid repeating notifications after restarting. Offline or failed automatic checks stay quiet and retry at the next daily check.
+Update checks and downloads contact GitHub over HTTPS. GitHub receives your IP address and request metadata, but no Bluetooth addresses, device names or battery data. No authentication token is used. The last notified version is saved in `%LOCALAPPDATA%\AirPodsBattery\notified-version.txt` to avoid repeating notifications after restarting. Offline or failed automatic checks stay quiet and retry at the next daily check. Velopack verifies package checksums before installation. Trust is based on HTTPS and control of this GitHub repository; packages do not yet have independent publisher signatures or Authenticode signing.
 
 Bluetooth advertisements are read locally. Battery values and device selections are held in memory. The optional `--diagnose` mode writes packet counts and errors beside the executable and does not check for updates; it does not intentionally log raw packets or addresses. Error details may contain local paths, so review logs before sharing them.
 

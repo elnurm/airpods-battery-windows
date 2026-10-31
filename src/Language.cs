@@ -8,6 +8,16 @@ internal static class Language {
     static readonly string path=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"AirPodsBattery","language.txt");
     public static bool Russian=Load();
     static readonly Dictionary<string,string> translations=new Dictionary<string,string> {
+        {"Downloading update","Загрузка обновления"},
+        {"Cancel","Отмена"},
+        {"Cancelling…","Отмена…"},
+        {" is available. Click to update in the app."," доступна. Нажмите для обновления в приложении."},
+        {"Download version ","Скачать версию "},
+        {"? You can keep using the app until you choose to restart.","? Вы сможете пользоваться приложением до перезапуска."},
+        {"Update downloaded and verified. Restart now to install it?","Обновление загружено и проверено. Перезапустить приложение для установки?"},
+        {"Restart and update","Перезапустить и обновить"},
+        {"Update could not be completed. Your current version is still available. Try again later or use GitHub releases.","Не удалось завершить обновление. Текущая версия остаётся доступной. Повторите попытку позже или откройте версии на GitHub."},
+        {"Update failed","Ошибка обновления"},
         {"Left earbud","Левый наушник"},
         {"Right earbud","Правый наушник"},
         {" battery"," — заряд"},
