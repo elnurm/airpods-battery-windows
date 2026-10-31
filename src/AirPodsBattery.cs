@@ -23,6 +23,7 @@ internal sealed class BatteryWindow : Form {
     BluetoothDevice pairedDevice;
     int pairingGeneration;
     bool loadingPaired;
+    DateTime nextDeviceDiscovery=DateTime.MinValue;
     bool pruning;
     bool broadcastExpired;
     int? preferredModel;
@@ -34,6 +35,7 @@ internal sealed class BatteryWindow : Form {
     readonly BatteryGauge[] values = new BatteryGauge[2];
     readonly System.Windows.Forms.Panel settings = new System.Windows.Forms.Panel();
     readonly Button settingsToggle = new Button();
+    readonly Button themeToggle = new Button();
     readonly Label deviceTitle = new Label();
     readonly Label[] ages = new Label[2];
     readonly int[] levels = {-1,-1};
@@ -53,36 +55,38 @@ internal sealed class BatteryWindow : Form {
     readonly ToolStripMenuItem russianLanguage=new ToolStripMenuItem("Русский");
     public BatteryWindow(bool diag) {
         diagnostic=diag;
-        Text="AirPods Battery"; ClientSize=new Size(400,656); FormBorderStyle=FormBorderStyle.Sizable; MaximizeBox=true;
+        Text="AirPods Battery"; ClientSize=new Size(400,484); FormBorderStyle=FormBorderStyle.Sizable; MaximizeBox=true;
         AutoScaleDimensions=new SizeF(96,96); AutoScaleMode=AutoScaleMode.Dpi;
         DoubleBuffered=true; StartPosition=FormStartPosition.CenterScreen;
-        BackColor=Artwork.Background; ForeColor=Color.FromArgb(31,32,35); Font=new Font("Segoe UI",10);
+        BackColor=Artwork.Background; ForeColor=Theme.Text; Font=new Font("Segoe UI",10);
         deviceTitle.Text="AirPods Battery";deviceTitle.Font=new Font("Segoe UI",22,FontStyle.Bold);
-        deviceTitle.SetBounds(20,24,360,42);deviceTitle.TextAlign=ContentAlignment.MiddleCenter;Controls.Add(deviceTitle);
-        status.SetBounds(24,72,352,38);status.Font=new Font("Segoe UI",9);status.ForeColor=Artwork.Muted;status.TextAlign=ContentAlignment.TopCenter;Controls.Add(status);
+        deviceTitle.SetBounds(20,14,360,42);deviceTitle.TextAlign=ContentAlignment.MiddleCenter;Controls.Add(deviceTitle);
+        status.SetBounds(24,60,352,38);status.Font=new Font("Segoe UI",9);status.ForeColor=Artwork.Muted;status.TextAlign=ContentAlignment.TopCenter;Controls.Add(status);
         string[] names={Language.T("Left earbud"),Language.T("Right earbud")};
         for(int i=0;i<2;i++) {
             int x=24+i*184;
-            Controls.Add(new Label {Text=names[i],ForeColor=Artwork.Muted,BackColor=Artwork.Card,Font=new Font("Segoe UI",9),Location=new Point(x+20,266),AutoSize=true});
-            values[i]=new BatteryGauge {Text="—",Location=new Point(x+20,292),Size=new Size(116,50),AccessibleName=names[i]+Language.T(" battery")};Controls.Add(values[i]);
-            ages[i]=new Label {Text=Language.T("Waiting for data"),ForeColor=Artwork.Muted,BackColor=Artwork.Card,Font=new Font("Segoe UI",8),Location=new Point(x+20,357),Size=new Size(136,25)};Controls.Add(ages[i]);
+            Controls.Add(new Label {Text=names[i],ForeColor=Artwork.Muted,BackColor=Artwork.Card,Font=new Font("Segoe UI",9),Location=new Point(x+20,230),AutoSize=true});
+            values[i]=new BatteryGauge {Text="—",Location=new Point(x+20,250),Size=new Size(116,50),AccessibleName=names[i]+Language.T(" battery")};Controls.Add(values[i]);
+            ages[i]=new Label {Text=Language.T("Waiting for data"),ForeColor=Artwork.Muted,BackColor=Artwork.Card,Font=new Font("Segoe UI",8),Location=new Point(x+20,302),Size=new Size(136,18)};Controls.Add(ages[i]);
         }
-        Controls.Add(new Label {Text=Language.T("Approximate battery levels"),ForeColor=Artwork.Muted,Font=new Font("Segoe UI",8),Location=new Point(24,418),AutoSize=true});
-        var rescan=new Button {Text=Language.T("Rescan"),FlatStyle=FlatStyle.Flat,ForeColor=ForeColor,BackColor=Artwork.Card,Location=new Point(304,408),Size=new Size(72,30)};
+        Controls.Add(new Label {Text=Language.T("Approximate battery levels"),ForeColor=Artwork.Muted,Font=new Font("Segoe UI",8),Location=new Point(24,338),AutoSize=true});
+        var rescan=new Button {Text=Language.T("Rescan"),FlatStyle=FlatStyle.Flat,ForeColor=ForeColor,BackColor=Artwork.Card,Location=new Point(304,328),Size=new Size(72,30)};
         rescan.FlatAppearance.BorderColor=Color.FromArgb(222,223,228);rescan.Click+=delegate {Restart();};Controls.Add(rescan);
-        settingsToggle.Text=Language.T("Hide device settings");settingsToggle.SetBounds(24,456,352,30);settingsToggle.FlatStyle=FlatStyle.Flat;
+        settingsToggle.Text=Language.T("Hide device settings");settingsToggle.SetBounds(24,368,232,30);settingsToggle.FlatStyle=FlatStyle.Flat;
         settingsToggle.FlatAppearance.BorderSize=0;settingsToggle.TextAlign=ContentAlignment.MiddleLeft;settingsToggle.ForeColor=Artwork.Muted;
         settingsToggle.Click+=delegate {SetSettingsVisible(!settings.Visible);};Controls.Add(settingsToggle);
-        settings.SetBounds(24,496,352,168);settings.BackColor=BackColor;Controls.Add(settings);
+        themeToggle.SetBounds(264,368,112,30);themeToggle.FlatStyle=FlatStyle.Flat;themeToggle.FlatAppearance.BorderSize=0;
+        themeToggle.Click+=delegate {ChangeTheme(!Theme.Dark,true);};Controls.Add(themeToggle);
+        settings.SetBounds(24,408,352,60);settings.BackColor=BackColor;Controls.Add(settings);
         showAllModels.Text=Language.T("Show all AirPods models");showAllModels.SetBounds(0,140,352,24);
         showAllModels.Font=new Font("Segoe UI",8);showAllModels.ForeColor=Artwork.Muted;
-        showAllModels.CheckedChanged+=delegate {FilterBroadcasts();};settings.Controls.Add(showAllModels);
-        ClientSize=new Size(400,680);
+        showAllModels.CheckedChanged+=delegate {FilterBroadcasts();};settings.Controls.Add(showAllModels);showAllModels.Visible=false;
+        ClientSize=new Size(400,484);
         settings.Controls.Add(new Label {Text=Language.T("Windows Bluetooth device"),ForeColor=Artwork.Muted,Font=new Font("Segoe UI",8),Location=new Point(0,0),AutoSize=true});
         pairedPicker.SetBounds(0,22,352,28);pairedPicker.DropDownStyle=ComboBoxStyle.DropDownList;pairedPicker.DisplayMember="Name";
         pairedPicker.BackColor=Artwork.Card;pairedPicker.ForeColor=ForeColor;pairedPicker.AccessibleName=Language.T("Windows Bluetooth device to monitor");
         pairedPicker.SelectedIndexChanged+=delegate {BindPairedDevice();};settings.Controls.Add(pairedPicker);
-        settings.Controls.Add(new Label {Text=Language.T("Nearby battery broadcast"),ForeColor=Artwork.Muted,Font=new Font("Segoe UI",8),Location=new Point(0,65),AutoSize=true});
+        settings.Controls.Add(new Label {Visible=false,Text=Language.T("Nearby battery broadcast"),ForeColor=Artwork.Muted,Font=new Font("Segoe UI",8),Location=new Point(0,65),AutoSize=true});
         picker.SetBounds(0,87,352,28);picker.DropDownStyle=ComboBoxStyle.DropDownList;picker.BackColor=Artwork.Card;picker.ForeColor=ForeColor;picker.AccessibleName=Language.T("Select your AirPods");
         picker.DrawMode=DrawMode.OwnerDrawFixed;picker.ItemHeight=42;picker.DropDownHeight=230;picker.IntegralHeight=false;
         picker.DrawItem+=delegate(object sender,DrawItemEventArgs e) {
@@ -98,7 +102,7 @@ internal sealed class BatteryWindow : Form {
         picker.SelectionChangeCommitted+=delegate {
             var chosen=picker.SelectedItem as Reading;
             if(chosen!=null) {preferredModel=chosen.ModelId;automaticSelection=false;automaticCandidate=null;showAllModels.Checked=false;FilterBroadcasts();SetSettingsVisible(false);}
-        };settings.Controls.Add(picker);
+        };settings.Controls.Add(picker);picker.Visible=false;
         string iconPath=Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"AirPods.ico");
         if(File.Exists(iconPath)) Icon=new Icon(iconPath);
         tray.Icon=Icon; tray.Text=Language.T("AirPods: waiting for battery data"); tray.Visible=!diag;
@@ -124,28 +128,56 @@ internal sealed class BatteryWindow : Form {
             picker.Invalidate();
             if(pairedDevice!=null) { try { SetConnected(pairedDevice.ConnectionStatus==BluetoothConnectionStatus.Connected); } catch { SetConnected(null); } }
             TryAutomaticSelection(DateTime.UtcNow);
+            if(!previewMode && connection.Connected!=true && DateTime.UtcNow>=nextDeviceDiscovery) {nextDeviceDiscovery=DateTime.UtcNow.AddSeconds(10);LoadPairedDevices();}
             if(!diagnostic && DateTime.UtcNow>=nextUpdateCheck)CheckForUpdates(false);
             RefreshReadings();
             if(diagnostic && (DateTime.UtcNow-started).TotalSeconds>=20) { SaveDiagnostic(); quitting=true; Close(); }
         };
         var children=new List<Control>();foreach(Control child in Controls)children.Add(child);
-        content.SetBounds(0,0,400,680);content.BackColor=BackColor;
+        content.SetBounds(0,0,400,484);content.BackColor=BackColor;
         foreach(var child in children)content.Controls.Add(child);
         Controls.Add(content);content.Paint+=delegate(object sender,PaintEventArgs e) {DrawArtwork(e);};
         layoutReady=true;Resize+=delegate {ArrangeWindow();};ArrangeWindow();
         Shown += delegate { ArrangeWindow();if(previewMode) return; LoadPairedDevices(); Restart(); timer.Start(); if(diagnostic) Hide(); else CheckForUpdates(false); };
+        ChangeTheme(Theme.Dark,false);
         RefreshReadings();
+    }
+    void ChangeTheme(bool dark,bool save) {
+        Color oldCard=Artwork.Card,oldMuted=Artwork.Muted;
+        Theme.Dark=dark;if(save)Theme.Save();
+        Theme.Apply(this,oldCard,oldMuted);
+        themeToggle.Text=Language.T(dark?"Light mode":"Dark mode");
+        themeToggle.AccessibleName=themeToggle.Text;
+        tray.ContextMenuStrip.BackColor=Artwork.Card;tray.ContextMenuStrip.ForeColor=Theme.Text;
+        tray.ContextMenuStrip.Renderer=new ToolStripProfessionalRenderer(new ThemeMenuColors());
+        foreach(ToolStripItem item in tray.ContextMenuStrip.Items)Theme.ApplyMenu(item);
+        Theme.ApplyTitle(this);RefreshReadings();
     }
     async void LoadPairedDevices() {
         if(loadingPaired || IsDisposed) return;
         loadingPaired=true;
+        int discoveryGeneration=pairingGeneration;
         try {
             var list=await AwaitOperation(DeviceInformation.FindAllAsync(BluetoothDevice.GetDeviceSelectorFromPairingState(true)));
             if(IsDisposed) return;
-            pairedPicker.Items.Clear(); PairedChoice onlyAirPods=null; int matches=0;
-            foreach(var d in list) { var item=new PairedChoice {Device=d}; pairedPicker.Items.Add(item); if(d.Name.IndexOf("airpods",StringComparison.OrdinalIgnoreCase)>=0) {onlyAirPods=item;matches++;} }
+            var previous=pairedPicker.SelectedItem as PairedChoice;
+            PairedChoice onlyAirPods=null,connectedAirPods=null,retained=null;int matches=0,connectedMatches=0;
+            var choices=new List<PairedChoice>();
+            foreach(var d in list) {
+                var item=new PairedChoice {Device=d};choices.Add(item);
+                if(previous!=null && previous.Device.Id==d.Id)retained=item;
+                if(d.Name.IndexOf("airpods",StringComparison.OrdinalIgnoreCase)<0)continue;
+                onlyAirPods=item;matches++;
+                try {using(var device=await AwaitOperation(BluetoothDevice.FromIdAsync(d.Id))) {
+                    if(device!=null && device.ConnectionStatus==BluetoothConnectionStatus.Connected) {connectedAirPods=item;connectedMatches++;}
+                }} catch { }
+            }
+            if(IsDisposed || discoveryGeneration!=pairingGeneration)return;
+            var chosen=connectedMatches==1?connectedAirPods:retained ?? (matches==1?onlyAirPods:null);
+            if(previous!=null && chosen!=null && previous.Device.Id==chosen.Device.Id)return;
+            pairedPicker.Items.Clear();foreach(var item in choices)pairedPicker.Items.Add(item);
             connectionError=list.Count==0?Language.T("No paired Bluetooth device found. Pair your AirPods in Windows."):"";
-            if(matches==1) pairedPicker.SelectedItem=onlyAirPods;
+            pairedPicker.SelectedItem=chosen;
         } catch {connectionError=Language.T("Unable to check Bluetooth connection. Try Rescan."); SetConnected(null);}
         finally {loadingPaired=false; if(!IsDisposed) RefreshReadings();}
     }
@@ -254,19 +286,19 @@ internal sealed class BatteryWindow : Form {
     }
     void SetSettingsVisible(bool visible) {
         float scale=content.Width/400f;
-        int oldHeight=(int)((settingsExpanded?680:500)*scale);
+        int oldHeight=(int)((settingsExpanded?484:412)*scale);
         bool compact=WindowState==FormWindowState.Normal && ClientSize.Height<=oldHeight+1;
         settingsExpanded=visible;
         settings.Visible=visible;settingsToggle.Text=visible?Language.T("Hide device settings"):Language.T("Device settings");
         ArrangeWindow();
-        if(compact)ClientSize=new Size(ClientSize.Width,(int)((visible?680:500)*scale));
+        if(compact)ClientSize=new Size(ClientSize.Width,(int)((visible?484:412)*scale));
         ArrangeWindow();content.Invalidate();
     }
     void ArrangeWindow() {
         if(!layoutReady || arranging || WindowState==FormWindowState.Minimized)return;
         arranging=true;
         try {
-            int height=(int)((settingsExpanded?680:500)*(content.Width/400f));
+            int height=(int)((settingsExpanded?484:412)*(content.Width/400f));
             content.Height=height;
             MinimumSize=SizeFromClientSize(new Size(content.Width,height));
             content.Location=new Point(Math.Max(0,(ClientSize.Width-content.Width)/2),Math.Max(0,(ClientSize.Height-height)/2));
@@ -275,13 +307,13 @@ internal sealed class BatteryWindow : Form {
     void DrawArtwork(PaintEventArgs e) {
         var g=e.Graphics;g.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
         float scale=content.Width/400f;g.ScaleTransform(scale,scale);
-        Artwork.Earbud(g,94,121,102,false);Artwork.Earbud(g,204,121,102,true);
+        Artwork.Earbud(g,100,101,90,false);Artwork.Earbud(g,210,101,90,true);
         for(int i=0;i<2;i++) {
             int x=24+i*184;
-            Artwork.Box(g,Color.FromArgb(235,235,239),x,250,168,148,20);
-            Artwork.Box(g,Artwork.Card,x,248,168,148,20);
+            Artwork.Box(g,Theme.Shadow,x,216,168,112,20);
+            Artwork.Box(g,Artwork.Card,x,214,168,112,20);
         }
-        using(var pen=new Pen(Color.FromArgb(225,225,230)))g.DrawLine(pen,24,450,376,450);
+        using(var pen=new Pen(Theme.Border))g.DrawLine(pen,24,362,376,362);
     }
     void Dispatch(Action action) { if(!IsDisposed && IsHandleCreated) { try { BeginInvoke(action); } catch(InvalidOperationException) {} } }
     bool VisibleBroadcast(Reading reading) {
@@ -309,20 +341,35 @@ internal sealed class BatteryWindow : Form {
             // Removing a selected ComboBox item can select its neighbour; never
             // silently switch the battery source to another person's AirPods.
             picker.SelectedItem=lost?null:selected;
-            if(lost) {picker.SelectedIndex=-1;broadcastExpired=true;SetSettingsVisible(true);}
+            if(lost) {picker.SelectedIndex=-1;broadcastExpired=true;}
         } finally {picker.EndUpdate();pruning=false;}
         RefreshReadings();
     }
+    bool MatchesSelectedDevice(Reading reading) {
+        if(preferredModel.HasValue)return reading.ModelId==preferredModel.Value;
+        var selected=pairedPicker.SelectedItem as PairedChoice;
+        if(selected==null)return previewMode;
+        string name=selected.Name.ToLowerInvariant();
+        if(name.Contains("max"))return false;
+        string model=Models.Names[reading.ModelId].ToLowerInvariant();
+        if(name.Contains("pro 3"))return reading.ModelId==Models.TestedModel;
+        if(name.Contains("pro 2"))return model.Contains("pro 2");
+        if(name.Contains("pro"))return model.Contains("pro");
+        if(name.Contains("airpods 4"))return model.StartsWith("airpods 4");
+        if(name.Contains("airpods 3"))return model=="airpods 3";
+        if(name.Contains("airpods 2"))return model=="airpods 2";
+        return true;
+    }
     void TryAutomaticSelection(DateTime now) {
-        if(connection.Connected!=true || !preferredModel.HasValue || error.Length>0) {automaticCandidate=null;return;}
+        if(connection.Connected!=true || error.Length>0) {automaticCandidate=null;return;}
         if(picker.SelectedItem!=null && !automaticSelection) return;
         Reading only=null;int matches=0;
         foreach(var r in devices.Values) {
-            if(r.ModelId==preferredModel.Value && !r.IsExpired(now)) {only=r;matches++;}
+            if(MatchesSelectedDevice(r) && !r.IsExpired(now)) {only=r;matches++;}
         }
         if(matches!=1) {
             automaticCandidate=null;
-            if(automaticSelection) {picker.SelectedIndex=-1;automaticSelection=false;broadcastExpired=true;SetSettingsVisible(true);}
+            if(automaticSelection) {picker.SelectedIndex=-1;automaticSelection=false;broadcastExpired=true;}
             return;
         }
         if(picker.SelectedItem==only)return;
@@ -331,7 +378,7 @@ internal sealed class BatteryWindow : Form {
         // Model matching is a convenience heuristic, not authenticated identity.
         if(automaticCandidate!=only) {automaticCandidate=only;candidateSince=now;return;}
         if((now-candidateSince).TotalSeconds<5)return;
-        automaticSelection=true;picker.SelectedItem=only;SetSettingsVisible(false);
+        preferredModel=only.ModelId;automaticSelection=true;picker.SelectedItem=only;SetSettingsVisible(false);
     }
     void Received(BluetoothLEAdvertisementWatcher sender,BluetoothLEAdvertisementReceivedEventArgs e) {
         var decoded=new List<Reading>(); int apples=0, encrypted=0;
@@ -384,11 +431,11 @@ internal sealed class BatteryWindow : Form {
             values[i].AccessibleDescription=values[i].Detail;values[i].Invalidate();
             tips[i]=(Language.Russian?"ЛП":"LR")[i]+" ~"+r.Level[i]+"%"+(stale?Language.T(" old"):"");
         }
-        tray.Text=r==null?Language.T("AirPods: select a detected pair"):string.Join(" | ",tips);
-        status.Text=error.Length>0?error:(r==null?(devices.Count==0?Language.T("Searching for your AirPods…"):Language.T("Select your nearby pair above")):(fresh[0]||fresh[1]?Language.T("●  Connected to this PC"):Language.T("Waiting for updates · rescan or select your pair again")));
-        if(broadcastExpired && connection.Connected==true && error.Length==0)status.Text=Language.T("Searching for a unique matching broadcast… Multiple matches? Choose in Device settings.");
+        tray.Text=r==null?Language.T("AirPods: waiting for battery data"):string.Join(" | ",tips);
+        status.Text=error.Length>0?error:(r==null?(devices.Count==0?Language.T("Searching for your AirPods…"):Language.T("Waiting for battery data…")):(fresh[0]||fresh[1]?Language.T("●  Connected to this PC"):Language.T("Waiting for battery data…")));
+        if(broadcastExpired && connection.Connected==true && error.Length==0)status.Text=Language.T("Waiting for a clear battery signal… Keep your AirPods near this PC.");
         if(connection.Connected!=true) {
-            status.Text=connectionError.Length>0?connectionError:connection.Connected==false?Language.T("AirPods disconnected · reconnect in Windows"):pairedPicker.SelectedItem==null?Language.T("Select your Windows AirPods device in the top list"):Language.T("Checking Bluetooth connection…");
+            status.Text=connectionError.Length>0?connectionError:connection.Connected==false?Language.T("AirPods disconnected · reconnect in Windows"):pairedPicker.SelectedItem==null?Language.T("Connect your AirPods, or choose them in Device settings"):Language.T("Checking Bluetooth connection…");
             tray.Text=connection.Connected==false?Language.T("AirPods disconnected"):Language.T("AirPods: connection not verified");
         }
         status.ForeColor=connection.Connected==true && error.Length==0?Artwork.Mint:Artwork.Muted;
@@ -404,7 +451,7 @@ internal sealed class BatteryWindow : Form {
     }
     [STAThread] static int Main(string[] args) {
         Velopack.VelopackApp.Build().SetAutoApplyOnStartup(false).Run();
-        if(args.Length>0 && (args[0]=="--test" || args[0]=="--test-ui"))Language.Set(false,false);
+        if(args.Length>0 && (args[0]=="--test" || args[0]=="--test-ui")){Language.Set(false,false);Theme.Dark=false;}
         if(args.Length>0 && args[0]=="--assets") { Artwork.SaveIcon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"AirPods.ico")); return 0; }
         if(args.Length>0 && args[0]=="--test") {try {Decoder.Test(); ConnectionState.Test(); UpdateChecker.Test(); File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"tests.txt"),"Decoder, connection-transition and update selection tests passed."); return 0;} catch {return 1;}}
         Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
@@ -420,7 +467,12 @@ internal sealed class BatteryWindow : Form {
                 r.Updated[0]=DateTime.UtcNow.AddMinutes(-3);w.RefreshReadings();
                 if(w.ages[0].Text!="Last known" || w.values[0].Fresh || !w.values[0].Detail.Contains("3 minutes"))throw new Exception("Stale reading visibility test failed");
                 using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height));b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"stale-preview.png"));}
-                w.SetSettingsVisible(true);if(!w.settings.Visible || w.ClientSize.Height<=500)throw new Exception("Settings expansion failed");
+                w.ChangeTheme(true,false);
+                if(w.BackColor!=Artwork.Background || w.values[0].BackColor!=Artwork.Card || w.themeToggle.Text!="Light mode")throw new Exception("Dark theme did not apply");
+                using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height));b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"dark-preview.png"));}
+                w.ChangeTheme(false,false);
+                if(w.BackColor!=Artwork.Background || w.values[0].BackColor!=Color.White || w.themeToggle.Text!="Dark mode")throw new Exception("Light theme did not restore");
+                w.SetSettingsVisible(true);if(w.picker.Visible || w.showAllModels.Visible)throw new Exception("Technical broadcast controls are visible");if(!w.settings.Visible || w.ClientSize.Height<=412)throw new Exception("Settings expansion failed");
                 w.SetSettingsVisible(false);
                 w.SetConnected(false);
                 if(w.values[0].Text!="—" || w.values[1].Text!="—" || w.levels[0]!=-1 || w.levels[1]!=-1 || r.Level[0]!=-1 || w.tray.Text!="AirPods disconnected") throw new Exception("Disconnect clearing test failed");
@@ -435,8 +487,8 @@ internal sealed class BatteryWindow : Form {
                 w.PruneBroadcasts(now);
                 if(w.devices.ContainsKey(2) || w.picker.SelectedItem!=r || w.picker.Items.Count!=2)throw new Exception("Expiry changed a live selection");
                 r.LastSeen=now.AddSeconds(-120);w.PruneBroadcasts(now);
-                if(w.picker.SelectedIndex!=-1 || w.values[0].Text!="—" || !w.broadcastExpired || !w.settings.Visible || !w.devices.ContainsKey(3))throw new Exception("Expired selection switched to another pair");
-                w.preferredModel=current.ModelId;
+                if(w.picker.SelectedIndex!=-1 || w.values[0].Text!="—" || !w.broadcastExpired || !w.devices.ContainsKey(3))throw new Exception("Expired selection switched to another pair");
+                w.preferredModel=null; // First launch must work without a manually selected broadcast.
                 w.TryAutomaticSelection(now);w.TryAutomaticSelection(now.AddSeconds(6));
                 if(w.picker.SelectedItem!=null)throw new Exception("Auto selection while connection unknown");
                 w.SetConnected(true);current.Level[0]=70;current.Updated[0]=now;
@@ -462,16 +514,17 @@ internal sealed class BatteryWindow : Form {
                 if(w.picker.SelectedItem!=null)throw new Exception("Stale candidate selected automatically");
                 w.SetSettingsVisible(true);
                 w.ClientSize=new Size(800,800);Application.DoEvents();
-                if(w.content.Left!=200 || w.content.Top!=60 || w.content.Right>w.ClientSize.Width || w.content.Bottom>w.ClientSize.Height)throw new Exception("Resized layout not centered");
+                if(w.content.Left!=200 || w.content.Top!=158 || w.content.Right>w.ClientSize.Width || w.content.Bottom>w.ClientSize.Height)throw new Exception("Resized layout not centered");
                 w.SetSettingsVisible(false);
-                if(w.ClientSize.Height!=800 || w.content.Height!=500 || w.content.Top!=150)throw new Exception("Settings toggle lost user window size");
+                if(w.ClientSize.Height!=800 || w.content.Height!=412 || w.content.Top!=194)throw new Exception("Settings toggle lost user window size");
                 w.SetSettingsVisible(true);
                 using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height));b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"resized-preview.png"));}
                 w.WindowState=FormWindowState.Maximized;Application.DoEvents();w.SetSettingsVisible(false);
                 if(w.WindowState!=FormWindowState.Maximized || w.content.Right>w.ClientSize.Width || w.content.Bottom>w.ClientSize.Height)throw new Exception("Maximized settings layout failed");
-                w.WindowState=FormWindowState.Normal;w.SetSettingsVisible(true);w.ClientSize=new Size(400,680);Application.DoEvents();
+                w.WindowState=FormWindowState.Normal;w.SetSettingsVisible(true);w.ClientSize=new Size(400,484);Application.DoEvents();
                 current.Level[0]=70;current.LastSeen=current.Updated[0]=DateTime.UtcNow;w.picker.SelectedItem=current;
                 w.ChangeLanguage(true,false);
+                if(w.themeToggle.Text!="Тёмная тема")throw new Exception("Russian theme label failed");
                 if(w.picker.SelectedItem!=current || w.values[0].Text!="70%" || !w.values[0].Detail.Contains("Обновлено") || w.settingsToggle.Text!="Скрыть настройки устройств" || w.tray.ContextMenuStrip.Items[0].Text!="Показать заряд")throw new Exception("Russian language switch failed");
                 if(!current.SeenLabel(DateTime.UtcNow).StartsWith("Сигнал") || !Models.Label(0x0220).Contains("экспериментально"))throw new Exception("Russian broadcast labels failed");
                 using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height));b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"russian-preview.png"));}

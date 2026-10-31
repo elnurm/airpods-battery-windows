@@ -1,11 +1,13 @@
-# 0.3.2 — Fix GitHub update checks
+# 0.3.3 — Compact design, themes and automatic discovery
 
-Fixes the misleading internet error in 0.3.0 and 0.3.1: the installed updater inherited old .NET TLS defaults, which GitHub rejected. This release explicitly enables TLS 1.2 and includes a .NET Framework 4.8 runtime configuration. Certificate validation remains enabled.
+A smaller window, saved light/dark themes, and simpler device setup.
 
-- Installed update checks now use a modern secure connection.
-- Manual failures show the actual error instead of blaming the internet connection.
-- Added a live GitHub check and verified-download test; local feed tests alone did not expose this issue.
+- Switch between light and dark mode at the bottom of the window. The app remembers your choice; English and Russian labels are included.
+- More compact battery cards and earbud illustrations, with readable percentages and a resizable window.
+- Automatically select a uniquely connected AirPods device and discover battery data in the background. Broadcast selection and model-filter controls are no longer shown.
+- Recover automatically after battery signal addresses change. When several matching signals are nearby, clear the automatic selection and wait instead of guessing.
+- Refresh English and Russian setup instructions and screenshots.
 
-**For affected installed users:** download and run **AirPodsBatteryDesktop-win-Setup.exe** once if the existing updater cannot connect. Existing language settings are preserved. Future releases can then be downloaded and applied from the app.
+**Download:** run **AirPodsBatteryDesktop-win-Setup.exe**. Existing installed users can use **Check for updates**, download the update, and confirm a restart. Users on 0.3.0/0.3.1 with failing update checks should run this installer once; the TLS fix from 0.3.2 is included. Portable ZIP users also need this installer once.
 
-This remains an unsigned installer. Battery behavior and supported languages are unchanged.
+Battery readings remain approximate 10% steps. AirPods Pro 3 is tested; other recognized models are experimental. Bluetooth battery signals cannot authenticate ownership, even when only one matches. This remains an unsigned installer.

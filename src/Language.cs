@@ -8,6 +8,11 @@ internal static class Language {
     static readonly string path=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"AirPodsBattery","language.txt");
     public static bool Russian=Load();
     static readonly Dictionary<string,string> translations=new Dictionary<string,string> {
+        {"Light mode","Светлая тема"},
+        {"Dark mode","Тёмная тема"},
+        {"Connect your AirPods, or choose them in Device settings","Подключите AirPods или выберите их в настройках устройств"},
+        {"Waiting for battery data…","Ожидание данных о заряде…"},
+        {"Waiting for a clear battery signal… Keep your AirPods near this PC.","Ожидание сигнала… Держите AirPods рядом с компьютером."},
         {"Could not check for updates. Details: ","Не удалось проверить обновления. Подробности: "},
         {"Downloading update","Загрузка обновления"},
         {"Cancel","Отмена"},

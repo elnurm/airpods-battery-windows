@@ -5,10 +5,10 @@ using System.Drawing.Imaging;
 using System.IO;
 
 internal static class Artwork {
-    public static readonly Color Background=Color.FromArgb(245,245,247);
-    public static readonly Color Card=Color.White;
-    public static readonly Color Muted=Color.FromArgb(106,109,117);
-    public static readonly Color Mint=Color.FromArgb(36,133,83);
+    public static Color Background {get {return Theme.Dark?Color.FromArgb(28,29,34):Color.FromArgb(245,245,247);}}
+    public static Color Card {get {return Theme.Dark?Color.FromArgb(43,45,52):Color.White;}}
+    public static Color Muted {get {return Theme.Dark?Color.FromArgb(178,182,193):Color.FromArgb(106,109,117);}}
+    public static Color Mint {get {return Theme.Dark?Color.FromArgb(101,220,160):Color.FromArgb(36,133,83);}}
     public static GraphicsPath Round(float x,float y,float w,float h,float r) {
         var p=new GraphicsPath(); float d=r*2;
         p.AddArc(x,y,d,d,180,90); p.AddArc(x+w-d,y,d,d,270,90);

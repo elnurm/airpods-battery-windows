@@ -34,10 +34,12 @@ internal sealed class UpdateDownloadWindow : Form {
     public UpdateDownloadWindow() {
         Text=Language.T("Downloading update");ClientSize=new Size(380,125);StartPosition=FormStartPosition.CenterParent;
         FormBorderStyle=FormBorderStyle.FixedDialog;MinimizeBox=false;MaximizeBox=false;
-        Font=new Font("Segoe UI",9);BackColor=Artwork.Background;
+        Font=new Font("Segoe UI",9);BackColor=Artwork.Background;ForeColor=Theme.Text;
         message.SetBounds(16,12,348,24);message.Text=Language.T("Downloading update");Controls.Add(message);
         progress.SetBounds(16,42,348,20);Controls.Add(progress);
         cancel.Text=Language.T("Cancel");cancel.SetBounds(244,80,120,28);Controls.Add(cancel);
+        cancel.FlatStyle=FlatStyle.Flat;cancel.BackColor=Artwork.Card;cancel.ForeColor=Theme.Text;cancel.FlatAppearance.BorderColor=Theme.Border;
+        Shown+=delegate {Theme.ApplyTitle(this);};
         cancel.Click+=delegate {CancelDownload();};
         FormClosing+=delegate(object sender,FormClosingEventArgs e) {if(!complete) {e.Cancel=true;CancelDownload();}};
     }

@@ -12,6 +12,7 @@ $window = [Activator]::CreateInstance($windowType, [object[]]@($true))
 $appIcon = [Drawing.Icon]::new((Join-Path $projectRoot 'assets\AirPods.ico'))
 $window.Icon = $appIcon
 try {
+    $windowType.GetMethod('ChangeTheme', $privateInstance).Invoke($window, [object[]]@($false, $false)) | Out-Null
     $window.Show()
     [System.Windows.Forms.Application]::DoEvents()
     $windowType.GetMethod('SetConnected', $privateInstance).Invoke($window, [object[]]@($true)) | Out-Null

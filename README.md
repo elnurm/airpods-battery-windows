@@ -49,9 +49,11 @@ Get **AirPodsBatteryDesktop-win-Setup.exe** from [GitHub Releases](https://githu
 
 1. Exit any old copy through its tray menu, run the setup program, and open **AirPods Battery for Windows** from the Start menu.
 2. Pair and connect your AirPods using Windows Bluetooth settings.
-3. Expand **Device settings**. In the **Windows Bluetooth device** dropdown, select the Windows Bluetooth device to monitor. A single paired device named AirPods is selected automatically; renamed devices can be selected manually.
-4. In the **Nearby battery broadcast** dropdown, select your nearby AirPods battery broadcast. Opening the case near the PC can help discovery.
+3. The app automatically selects a uniquely connected device named AirPods. For renamed devices or multiple connected pairs, choose your headphones under **Device settings → Windows Bluetooth device**.
+4. Battery discovery runs automatically in the background. Keep your AirPods near the PC; opening the case can help discovery.
 5. Close the window to keep it in the tray. Double-click the tray icon to reopen it; right-click → **Exit** to quit.
+
+Use **Dark mode / Light mode** at the bottom of the window to switch appearance. Your choice is saved for the next launch.
 
 Exit any previous copy before opening a new version. The release is unsigned; code signing is not included in this early community release.
 
@@ -79,11 +81,11 @@ Using an experimental model? [Report whether it works](https://github.com/elnurm
 
 **Connection vs. proximity:** a nearby AirPods broadcast does not mean the headphones are connected to Windows. The app separately checks the selected paired Windows device's connection state. A disconnect clears the stored percentages and bars; broadcasts received while disconnected cannot restore them. Windows may delay reporting the change, and Do Not Disturb or notification preferences may suppress the popup.
 
-**Why two selectors?** AirPods rotate their BLE address. This version cannot authenticate the broadcast as belonging to the Windows device, so you choose both. Use it away from other AirPods when selecting, and choose the new broadcast if the address changes. After you manually choose a broadcast, the app remembers its model for this session. When that address expires, it automatically selects a sole matching model after five seconds of observation, provided its battery broadcast is fresh. Multiple matching models require manual selection; a second match also clears an automatic selection. Changing the Windows device resets the remembered model. This is a convenience heuristic: even a single matching broadcast may belong to someone else. If the two selectors refer to different pairs, the connection status and battery readings will not describe the same device.
+**Automatic discovery:** AirPods rotate their BLE address. The app looks for a single fresh battery signal compatible with the selected Windows device name, observes it for five seconds, and remembers its model for the session. It recovers automatically when an address expires. If multiple matching signals are nearby, it clears the automatic selection and waits instead of asking you to choose a broadcast. Changing the Windows device resets the remembered model. BLE signals cannot be authenticated as belonging to the Windows device; even a sole matching signal can belong to another pair.
 
-**Model filter:** selecting a nearby broadcast hides other AirPods models for the current session. Enable **Show all AirPods models** in Device settings to choose a different model. Choosing a broadcast applies the filter again. Other pairs of the same model remain visible; this filter does not verify ownership.
 
-**Old readings:** while Windows still reports a connection, a missing broadcast is treated as missing battery data, not proof of a disconnect. Readings older than 60 seconds are muted and labeled Last known. Their age is available on hover or keyboard focus. Broadcast entries show their last-seen time and signal strength (dBm), and disappear after two minutes without a supported battery broadcast. If the selected entry expires, its battery display clears and Device settings opens for a new selection. Signal strength does not establish which pair is yours.
+
+**Old readings:** while Windows still reports a connection, a missing signal means missing battery data, not a disconnect. Readings older than 60 seconds are muted and labeled Last known. Their age is available on hover or keyboard focus. After two minutes without a supported battery signal, the entry expires and the display clears while automatic discovery continues.
 
 ## Troubleshooting
 
@@ -92,7 +94,7 @@ Using an experimental model? [Report whether it works](https://github.com/elnurm
 | No paired device listed | Pair in Windows first, then click Rescan. |
 | Disconnected even with earbuds nearby | Connect the selected device to this PC; proximity is not a connection. |
 | No battery broadcasts | Open the case near the PC, check Bluetooth, and click Rescan. |
-| Updates stop | Check reading age and select the new broadcast entry if its address rotated. |
+| Updates stop | Check the reading age, keep your AirPods near the PC, and allow automatic discovery to find their new signal. |
 | No popup | Check Windows notification preferences; the disconnected state still appears in the app. |
 | Experimental model does not work | Submit a compatibility report; avoid posting serial numbers or Bluetooth addresses. |
 

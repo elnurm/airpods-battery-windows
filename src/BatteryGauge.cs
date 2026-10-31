@@ -22,7 +22,7 @@ internal sealed class BatteryGauge : Control {
         base.OnPaint(e);
         var g=e.Graphics; g.SmoothingMode=SmoothingMode.AntiAlias;
         var saved=g.Save();g.ScaleTransform(Width/116f,Height/50f);
-        Artwork.Box(g,Color.FromArgb(224,226,230),0,3,104,44,12);
+        Artwork.Box(g,(Theme.Dark && Level<0?Color.FromArgb(98,102,112):Color.FromArgb(224,226,230)),0,3,104,44,12);
         Artwork.Box(g,Color.FromArgb(171,175,182),107,18,4,14,2);
         if(Level>=0) {
             using(var clip=Artwork.Round(3,6,98,38,9)) {
@@ -33,7 +33,7 @@ internal sealed class BatteryGauge : Control {
             }
         }
         g.Restore(saved);
-        TextRenderer.DrawText(g,Text,Font,new Rectangle(0,0,(int)(Width*104f/116),Height),Fresh?Color.FromArgb(29,48,37):Artwork.Muted,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter|TextFormatFlags.NoPadding);
+        TextRenderer.DrawText(g,Text,Font,new Rectangle(0,0,(int)(Width*104f/116),Height),Fresh?Color.FromArgb(29,48,37):Level>=0?Color.FromArgb(85,89,98):Artwork.Muted,TextFormatFlags.HorizontalCenter|TextFormatFlags.VerticalCenter|TextFormatFlags.NoPadding);
         if(Focused) ControlPaint.DrawFocusRectangle(g,ClientRectangle);
     }
     protected override void Dispose(bool disposing) {if(disposing) tooltip.Dispose();base.Dispose(disposing);}

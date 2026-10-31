@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.3 — Compact design, themes and automatic discovery
+
+- Add a saved light/dark theme switch with English and Russian labels.
+- Reduce battery card height and tighten window spacing.
+- Automatically select a uniquely connected AirPods device and discover battery signals in the background.
+- Remove broadcast and model-filter controls from visible settings; wait automatically when signals are ambiguous.
+- Keep English and Russian setup instructions in sync with the simplified flow.
+
 ## 0.3.2 — Fix GitHub update checks
 
 - Enable TLS 1.2 in the installed updater path and ship a .NET Framework 4.8 runtime configuration. Legacy TLS defaults prevented 0.3.0/0.3.1 from connecting to GitHub.
