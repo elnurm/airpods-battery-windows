@@ -8,7 +8,7 @@ $dist = Join-Path $projectRoot 'dist'
 New-Item -ItemType Directory -Force $dist | Out-Null
 $stage = Join-Path $projectRoot 'build\portable'
 New-Item -ItemType Directory -Force $stage | Out-Null
-$files = @("$projectRoot\build\AirPods.exe", "$projectRoot\build\AirPods.ico", "$projectRoot\README.md", "$projectRoot\LICENSE", "$projectRoot\NOTICE.md", "$projectRoot\CONTRIBUTING.md")
+$files = @("$projectRoot\build\AirPods.exe", "$projectRoot\build\AirPods.ico", "$projectRoot\README.md", "$projectRoot\README.ru.md", "$projectRoot\LICENSE", "$projectRoot\NOTICE.md", "$projectRoot\CONTRIBUTING.md")
 Copy-Item -LiteralPath $files -Destination $stage -Force
 foreach ($directory in @('assets','docs')) {
     New-Item -ItemType Directory -Force (Join-Path $stage $directory) | Out-Null

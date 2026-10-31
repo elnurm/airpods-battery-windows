@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 // Only recognized earbud formats are accepted. Unknown products and AirPods Max
 // must not be interpreted as a pair of earbuds without hardware validation.
@@ -12,6 +12,6 @@ internal static class Models {
     public static string Label(int id) {
         string name;
         if(!Names.TryGetValue(id,out name)) return "Unknown model";
-        return name+(id==TestedModel?"":" (experimental)");
+        return name+(id==TestedModel?"":Language.T(" (experimental)"));
     }
 }

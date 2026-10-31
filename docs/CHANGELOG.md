@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Prevent duplicate normal app processes and tray icons; a second launch shows the existing window. Diagnostic runs remain separate.
+- Add Russian translations for the interface, tray menu, tooltips, update dialogs, and notifications, with a saved English/Russian selection in the tray menu.
+- Allow resizing and maximizing the window, keeping the battery display centered and readable.
+- Keep manually enlarged windows at their chosen size when toggling Device settings; enforce a minimum size to prevent clipping.
+
 ## 0.2.4 — AirPods model filter
 
 - Hide other AirPods models after selecting a broadcast, with a Show all AirPods models option for switching pairs.

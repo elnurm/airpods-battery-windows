@@ -2,6 +2,8 @@
 
 <h1 align="center">AirPods Battery for Windows</h1>
 
+<p align="center"><strong>English</strong> · <a href="README.ru.md">Русский</a></p>
+
 <p align="center">
   <a href="https://github.com/elnurm/airpods-battery-windows/actions/workflows/build.yml"><img src="https://github.com/elnurm/airpods-battery-windows/actions/workflows/build.yml/badge.svg?branch=main" alt="Windows build and tests"></a>
   <a href="https://github.com/elnurm/airpods-battery-windows/releases"><img src="https://img.shields.io/github/v/release/elnurm/airpods-battery-windows?include_prereleases&amp;sort=semver&amp;label=release" alt="Latest release including previews"></a>
@@ -14,18 +16,32 @@
 
 <p align="center">Built for everyday listening on a Windows PC.<br><strong>Tested with AirPods Pro 3; other recognized AirPods earbuds are enabled experimentally.</strong><br>Community compatibility reports are welcome.</p>
 
-![AirPods Battery window with sample battery readings](docs/screenshot.png)
+<p align="center">
+  <a href="https://github.com/elnurm/airpods-battery-windows/releases"><img src="https://img.shields.io/badge/Download_for_Windows_11-ZIP-28a77b?style=for-the-badge" alt="Download AirPods Battery for Windows 11 (ZIP)"></a><br>
+  Choose the Windows x64 ZIP under Assets on the release page.
+</p>
 
-*Illustrative app render with synthetic readings, not a claim of precise battery measurement.*
+<table align="center">
+  <tr><th>English</th><th>Русский</th></tr>
+  <tr>
+    <td><img src="docs/screenshot.png" width="360" alt="AirPods Battery in English with sample battery readings"></td>
+    <td><img src="docs/screenshot-ru.png" width="360" alt="AirPods Battery на русском языке с примером уровня заряда"></td>
+  </tr>
+</table>
+
+*Illustrative app renders with identical synthetic readings, not a claim of precise battery measurement.*
 
 ## Features
 
 - Separate left and right earbud battery estimates and charging indicators.
 - Light Companion window, iPhone-style battery indicators, and a matching tray icon.
+- Resizable window with maximize support, centered content, and a minimum size that keeps controls visible.
+- Single instance per Windows user session: launching the app again shows the existing window instead of adding another tray icon.
+- English and Russian interface. Right-click the tray icon → **Language / Язык** → **English** or **Русский** to switch immediately. Your choice is saved; on first launch the app uses Russian for a Russian Windows UI language, otherwise English.
 - Clears percentages when the selected Windows Bluetooth device disconnects.
 - Requests one notification per disconnect; waits for fresh data after reconnecting.
 - Hover or keyboard-focus a battery indicator for its update time. Old readings visibly show Last known.
-- Portable Windows app. No account, internet connection, custom drivers, or installer.
+- Portable Windows app. No account, custom drivers, or installer. Battery monitoring works offline; update checks use the internet.
 
 ## Download and use
 
@@ -97,6 +113,8 @@ The app checks this project's public GitHub Releases API at startup and once eve
 Update checks send GitHub your IP address and the app version in the User-Agent header, but no Bluetooth addresses, device names or battery data. No authentication token is used and the app sends no telemetry. The last notified version is saved in `%LOCALAPPDATA%\AirPodsBattery\notified-version.txt` to avoid repeating notifications after restarting. Offline or failed automatic checks stay quiet and retry at the next daily check.
 
 Bluetooth advertisements are read locally. Battery values and device selections are held in memory. The optional `--diagnose` mode writes packet counts and errors beside the executable and does not check for updates; it does not intentionally log raw packets or addresses. Error details may contain local paths, so review logs before sharing them.
+
+Your chosen interface language is stored in `%LOCALAPPDATA%\AirPodsBattery\language.txt`. Device names and model names remain unchanged when switching languages.
 
 ## Contributing and license
 

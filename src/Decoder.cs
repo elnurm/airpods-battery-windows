@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Windows.Devices.Enumeration;
 
 internal sealed class Reading {
@@ -12,9 +12,9 @@ internal sealed class Reading {
     public bool IsExpired(DateTime now) { return (now-LastSeen).TotalSeconds>=ExpireAfterSeconds; }
     public string SeenLabel(DateTime now) {
         int seconds=(int)Math.Max(0,(now-LastSeen).TotalSeconds);
-        return seconds<5?"Seen just now":seconds<60?"Last seen "+seconds+"s ago":"Last seen "+(seconds/60)+"m ago";
+        return seconds<5?Language.T("Seen just now"):seconds<60?Language.T("Last seen ")+seconds+Language.T("s ago"):Language.T("Last seen ")+(seconds/60)+Language.T("m ago");
     }
-    public string SignalLabel { get {return Rssi>=-127 && Rssi<=0?Rssi+" dBm":"signal unavailable";} }
+    public string SignalLabel { get {return Rssi>=-127 && Rssi<=0?Rssi+" dBm":Language.T("signal unavailable");} }
     public int ModelId=Models.TestedModel;
     public string IdentityLabel {get {return Models.Label(ModelId)+" · "+Address.ToString("X12");}}
     public override string ToString() { return IdentityLabel+" · "+SeenLabel(DateTime.UtcNow)+" · "+SignalLabel; }
