@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.2 — Fix GitHub update checks
+
+- Enable TLS 1.2 in the installed updater path and ship a .NET Framework 4.8 runtime configuration. Legacy TLS defaults prevented 0.3.0/0.3.1 from connecting to GitHub.
+- Show the actual update-check error instead of assuming an internet connection problem.
+- Add an opt-in live GitHub check/download test to complement local feed tests.
+
 ## 0.3.1 — Translation roadmap and update-delivery test
 
 - Document plans for additional interface languages; English and Russian remain the supported languages.

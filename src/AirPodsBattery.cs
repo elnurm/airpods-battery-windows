@@ -176,8 +176,8 @@ internal sealed class BatteryWindow : Form {
                 tray.ShowBalloonTip(8000,Language.T("AirPods Battery update available"),Language.T("Version ")+version.ToString(3)+Language.T(" is available. Click to open the download page."),ToolTipIcon.Info);
                 UpdateChecker.MarkNotified(version);
             }
-        } catch {
-            if(manual && !IsDisposed && !Disposing)MessageBox.Show(this,Language.T("Could not check GitHub for updates. Check your internet connection and try again later."),Language.T("Check for updates"),MessageBoxButtons.OK,MessageBoxIcon.Information);
+        } catch(Exception updateError) {
+            if(manual && !IsDisposed && !Disposing)MessageBox.Show(this,Language.T("Could not check for updates. Details: ")+updateError.GetBaseException().Message,Language.T("Check for updates"),MessageBoxButtons.OK,MessageBoxIcon.Information);
         } finally {checkingUpdates=false;}
     }
     async System.Threading.Tasks.Task CheckInstalledUpdates(bool manual) {

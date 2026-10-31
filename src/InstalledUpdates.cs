@@ -7,9 +7,12 @@ using Velopack;
 using Velopack.Sources;
 
 internal static class InstalledUpdates {
-    public static UpdateManager CreateManager() {
+    public static UpdateManager CreateManager(Velopack.Locators.IVelopackLocator locator=null) {
+        // The legacy compiler otherwise starts with SSL3/TLS1.0 defaults.
+        // GitHub requires a modern TLS connection; certificate validation stays enabled.
+        System.Net.ServicePointManager.SecurityProtocol=System.Net.SecurityProtocolType.Tls12;
         // Public repository, HTTPS, no credentials. Preview releases are included.
-        return new UpdateManager(new GithubSource("https://github.com/elnurm/airpods-battery-windows",null,true),new UpdateOptions {ExplicitChannel="win",AllowVersionDowngrade=false});
+        return new UpdateManager(new GithubSource("https://github.com/elnurm/airpods-battery-windows",null,true),new UpdateOptions {ExplicitChannel="win",AllowVersionDowngrade=false},locator);
     }
     public static bool IsInstalled {get {var manager=CreateManager();return manager.IsInstalled && !manager.IsPortable;}}
     public static Version VersionOf(UpdateInfo info) {

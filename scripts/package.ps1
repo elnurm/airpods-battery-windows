@@ -11,7 +11,7 @@ $generated = Join-Path $projectRoot ('build\release-'+$version+'-'+[Guid]::NewGu
 New-Item -ItemType Directory -Force $dist | Out-Null
 $stage = Join-Path $projectRoot "build\installer-$version"
 New-Item -ItemType Directory -Force $stage | Out-Null
-$files = @("$projectRoot\build\AirPods.exe", "$projectRoot\build\AirPods.ico", "$projectRoot\build\Velopack.dll", "$projectRoot\build\Newtonsoft.Json.dll", "$projectRoot\README.md", "$projectRoot\README.ru.md", "$projectRoot\LICENSE", "$projectRoot\NOTICE.md", "$projectRoot\CONTRIBUTING.md")
+$files = @("$projectRoot\build\AirPods.exe", "$projectRoot\build\AirPods.exe.config", "$projectRoot\build\AirPods.ico", "$projectRoot\build\Velopack.dll", "$projectRoot\build\Newtonsoft.Json.dll", "$projectRoot\README.md", "$projectRoot\README.ru.md", "$projectRoot\LICENSE", "$projectRoot\NOTICE.md", "$projectRoot\CONTRIBUTING.md")
 Copy-Item -LiteralPath $files -Destination $stage -Force
 foreach ($directory in @('assets','docs')) {
     New-Item -ItemType Directory -Force (Join-Path $stage $directory) | Out-Null

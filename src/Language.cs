@@ -8,6 +8,7 @@ internal static class Language {
     static readonly string path=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"AirPodsBattery","language.txt");
     public static bool Russian=Load();
     static readonly Dictionary<string,string> translations=new Dictionary<string,string> {
+        {"Could not check for updates. Details: ","Не удалось проверить обновления. Подробности: "},
         {"Downloading update","Загрузка обновления"},
         {"Cancel","Отмена"},
         {"Cancelling…","Отмена…"},

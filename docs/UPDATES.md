@@ -7,6 +7,7 @@ The application uses Velopack 1.2.161 (net472) and Newtonsoft.Json 13.0.4. Downl
 1. Update `src/AssemblyInfo.cs`, the changelog and release notes. Use an increasing three-part version, for example `0.3.1`.
 2. Exit the running local build. Run `scripts/package.ps1` and `scripts/test.ps1 -IncludeUi`.
 3. Run `scripts/test-installed-updates.ps1` to exercise the generated feed and package locally.
+   Also run `scripts/test-online-updates.ps1` when network access is available. It uses the production updater factory to check and download the latest published package without installing it, explicitly starting from legacy TLS settings to catch regressions.
 4. Commit and push. Publish **all files** from `dist/v<version>/` together in one GitHub release tagged `v<version>`. Create a draft first; publish it only after every asset is uploaded. Do not rename the generated artifacts.
 
 The release must include `AirPodsBatteryDesktop-win-Setup.exe`, the full `.nupkg`, `releases.win.json`, `RELEASES`, `assets.win.json`, and `SHA256SUMS.txt`. Only the setup EXE is a user-facing download. Do not upload old portable ZIPs or mix artifacts from different builds. Existing releases are left intact.

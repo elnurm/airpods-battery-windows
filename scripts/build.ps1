@@ -18,5 +18,6 @@ $icon = Join-Path $projectRoot 'assets\AirPods.ico'
 & "$framework\csc.exe" /nologo /target:winexe /platform:x64 /optimize+ "/out:$output\AirPods.exe" "/win32icon:$icon" $references $sources
 if ($LASTEXITCODE -ne 0) { throw 'Compilation failed. Close the running build before rebuilding.' }
 Copy-Item -LiteralPath $icon -Destination $output
+Copy-Item -LiteralPath "$projectRoot\src\AirPods.exe.config" -Destination $output -Force
 Copy-Item -LiteralPath $dependencies -Destination $output -Force
 Write-Output "Built $output\AirPods.exe"

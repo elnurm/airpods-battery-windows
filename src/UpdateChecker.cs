@@ -28,7 +28,7 @@ internal static class UpdateChecker {
         }
     }
     public static async Task<Version> Check() {
-        ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
         using(var client=new Client()) {
             client.Headers[HttpRequestHeader.UserAgent]="AirPodsBatteryWindows/"+Current;
             client.Headers[HttpRequestHeader.Accept]="application/vnd.github+json";

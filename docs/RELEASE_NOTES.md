@@ -1,16 +1,11 @@
-# 0.3.1 — Translation roadmap and update-delivery test
+# 0.3.2 — Fix GitHub update checks
 
-This small release adds a note about planned interface languages to the English and Russian README files. No additional translations are included yet. Battery behavior and updater logic are unchanged.
+Fixes the misleading internet error in 0.3.0 and 0.3.1: the installed updater inherited old .NET TLS defaults, which GitHub rejected. This release explicitly enables TLS 1.2 and includes a .NET Framework 4.8 runtime configuration. Certificate validation remains enabled.
 
-It also provides a real newer package for testing the in-app update flow from 0.3.0 to 0.3.1. This prerelease is offered to all installed users, not just private testers.
+- Installed update checks now use a modern secure connection.
+- Manual failures show the actual error instead of blaming the internet connection.
+- Added a live GitHub check and verified-download test; local feed tests alone did not expose this issue.
 
-## Update from 0.3.0
+**For affected installed users:** download and run **AirPodsBatteryDesktop-win-Setup.exe** once if the existing updater cannot connect. Existing language settings are preserved. Future releases can then be downloaded and applied from the app.
 
-1. Keep your installed 0.3.0 copy running; do not install this setup manually if you want to test the updater.
-2. Right-click its tray icon and select **Check for updates** / **Проверить обновления**.
-3. Accept the download, then confirm **Restart and update** / **Перезапустить и обновить**.
-4. After restart, use **Check for updates** again. It should report version **0.3.1** as current. Check that your language preference is preserved.
-
-New users can download **AirPodsBatteryDesktop-win-Setup.exe**. Users of ZIP versions through 0.2.5 must install manually once; those versions cannot detect installer-only releases.
-
-The installer remains unsigned. The additional .nupkg and feed assets are required by the updater and are not manual downloads for users.
+This remains an unsigned installer. Battery behavior and supported languages are unchanged.
