@@ -18,7 +18,7 @@ internal sealed class BatteryWindow : Form {
     readonly System.Windows.Forms.Panel content = new System.Windows.Forms.Panel();
     bool layoutReady;
     bool arranging;
-    bool settingsExpanded=true;
+    bool settingsExpanded=false;
     readonly ConnectionState connection = new ConnectionState();
     BluetoothDevice pairedDevice;
     int pairingGeneration;
@@ -36,6 +36,9 @@ internal sealed class BatteryWindow : Form {
     readonly System.Windows.Forms.Panel settings = new System.Windows.Forms.Panel();
     readonly Button settingsToggle = new Button();
     readonly Button themeToggle = new Button();
+    readonly Button widgetMenu = new Button();
+    readonly ToolTip widgetTip = new ToolTip();
+    ToolStripMenuItem settingsMenu,themeMenu,pinMenu;
     readonly Label deviceTitle = new Label();
     readonly Label[] ages = new Label[2];
     readonly int[] levels = {-1,-1};
@@ -55,35 +58,32 @@ internal sealed class BatteryWindow : Form {
     readonly ToolStripMenuItem russianLanguage=new ToolStripMenuItem("Русский");
     public BatteryWindow(bool diag) {
         diagnostic=diag;
-        Text="AirPods Battery"; ClientSize=new Size(400,484); FormBorderStyle=FormBorderStyle.Sizable; MaximizeBox=true;
+        Text="AirPods Battery"; ClientSize=new Size(264,216); FormBorderStyle=FormBorderStyle.None; MaximizeBox=false;
         AutoScaleDimensions=new SizeF(96,96); AutoScaleMode=AutoScaleMode.Dpi;
         DoubleBuffered=true; StartPosition=FormStartPosition.CenterScreen;
         BackColor=Artwork.Background; ForeColor=Theme.Text; Font=new Font("Segoe UI",10);
-        deviceTitle.Text="AirPods Battery";deviceTitle.Font=new Font("Segoe UI",22,FontStyle.Bold);
-        deviceTitle.SetBounds(20,14,360,42);deviceTitle.TextAlign=ContentAlignment.MiddleCenter;Controls.Add(deviceTitle);
-        status.SetBounds(24,60,352,38);status.Font=new Font("Segoe UI",9);status.ForeColor=Artwork.Muted;status.TextAlign=ContentAlignment.TopCenter;Controls.Add(status);
-        string[] names={Language.T("Left earbud"),Language.T("Right earbud")};
+        deviceTitle.Text="AirPods Battery";deviceTitle.Font=new Font("Segoe UI",10,FontStyle.Bold);
+        deviceTitle.SetBounds(16,12,208,25);deviceTitle.TextAlign=ContentAlignment.MiddleLeft;deviceTitle.AutoEllipsis=true;Controls.Add(deviceTitle);
+        status.SetBounds(16,39,232,18);status.AutoEllipsis=true;status.Font=new Font("Segoe UI",8);status.ForeColor=Artwork.Muted;status.TextAlign=ContentAlignment.TopCenter;Controls.Add(status);
+        string[] names={Language.T("Left"),Language.T("Right")};
         for(int i=0;i<2;i++) {
-            int x=24+i*184;
-            Controls.Add(new Label {Text=names[i],ForeColor=Artwork.Muted,BackColor=Artwork.Card,Font=new Font("Segoe UI",9),Location=new Point(x+20,230),AutoSize=true});
-            values[i]=new BatteryGauge {Text="—",Location=new Point(x+20,250),Size=new Size(116,50),AccessibleName=names[i]+Language.T(" battery")};Controls.Add(values[i]);
-            ages[i]=new Label {Text=Language.T("Waiting for data"),ForeColor=Artwork.Muted,BackColor=Artwork.Card,Font=new Font("Segoe UI",8),Location=new Point(x+20,302),Size=new Size(136,18)};Controls.Add(ages[i]);
+            int x=18+i*122;
+            values[i]=new BatteryGauge {Text="—",Location=new Point(x,62),Size=new Size(106,106),Mirrored=i==1,AccessibleName=Language.T(i==0?"Left earbud":"Right earbud")+Language.T(" battery")};Controls.Add(values[i]);
+            Controls.Add(new Label {Text=names[i],ForeColor=Artwork.Muted,BackColor=Artwork.Background,Font=new Font("Segoe UI",8),Location=new Point(x,169),Size=new Size(106,18),TextAlign=ContentAlignment.MiddleCenter});
+            ages[i]=new Label {Text=Language.T("Waiting for data"),ForeColor=Artwork.Muted,BackColor=Artwork.Background,Font=new Font("Segoe UI",7.5f),Location=new Point(x-4,188),Size=new Size(114,17),TextAlign=ContentAlignment.MiddleCenter};Controls.Add(ages[i]);
         }
-        Controls.Add(new Label {Text=Language.T("Approximate battery levels"),ForeColor=Artwork.Muted,Font=new Font("Segoe UI",8),Location=new Point(24,338),AutoSize=true});
-        var rescan=new Button {Text=Language.T("Rescan"),FlatStyle=FlatStyle.Flat,ForeColor=ForeColor,BackColor=Artwork.Card,Location=new Point(304,328),Size=new Size(72,30)};
-        rescan.FlatAppearance.BorderColor=Color.FromArgb(222,223,228);rescan.Click+=delegate {Restart();};Controls.Add(rescan);
-        settingsToggle.Text=Language.T("Hide device settings");settingsToggle.SetBounds(24,368,232,30);settingsToggle.FlatStyle=FlatStyle.Flat;
-        settingsToggle.FlatAppearance.BorderSize=0;settingsToggle.TextAlign=ContentAlignment.MiddleLeft;settingsToggle.ForeColor=Artwork.Muted;
-        settingsToggle.Click+=delegate {SetSettingsVisible(!settings.Visible);};Controls.Add(settingsToggle);
-        themeToggle.SetBounds(264,368,112,30);themeToggle.FlatStyle=FlatStyle.Flat;themeToggle.FlatAppearance.BorderSize=0;
-        themeToggle.Click+=delegate {ChangeTheme(!Theme.Dark,true);};Controls.Add(themeToggle);
-        settings.SetBounds(24,408,352,60);settings.BackColor=BackColor;Controls.Add(settings);
+        settingsToggle.Text=Language.T("Device settings");settingsToggle.Visible=false;
+        settingsToggle.Click+=delegate {SetSettingsVisible(!settingsExpanded);};Controls.Add(settingsToggle);
+        themeToggle.Visible=false;themeToggle.Click+=delegate {ChangeTheme(!Theme.Dark,true);};Controls.Add(themeToggle);
+        widgetMenu.Text="⋯";widgetMenu.SetBounds(226,9,28,28);widgetMenu.FlatStyle=FlatStyle.Flat;widgetMenu.FlatAppearance.BorderSize=0;
+        widgetMenu.AccessibleName=Language.T("Widget menu");widgetMenu.Click+=delegate {tray.ContextMenuStrip.Show(widgetMenu,new Point(0,widgetMenu.Height));};Controls.Add(widgetMenu);
+        settings.SetBounds(16,222,232,60);settings.BackColor=BackColor;settings.Visible=false;Controls.Add(settings);
         showAllModels.Text=Language.T("Show all AirPods models");showAllModels.SetBounds(0,140,352,24);
         showAllModels.Font=new Font("Segoe UI",8);showAllModels.ForeColor=Artwork.Muted;
         showAllModels.CheckedChanged+=delegate {FilterBroadcasts();};settings.Controls.Add(showAllModels);showAllModels.Visible=false;
-        ClientSize=new Size(400,484);
+        ClientSize=new Size(264,216);
         settings.Controls.Add(new Label {Text=Language.T("Windows Bluetooth device"),ForeColor=Artwork.Muted,Font=new Font("Segoe UI",8),Location=new Point(0,0),AutoSize=true});
-        pairedPicker.SetBounds(0,22,352,28);pairedPicker.DropDownStyle=ComboBoxStyle.DropDownList;pairedPicker.DisplayMember="Name";
+        pairedPicker.SetBounds(0,22,232,28);pairedPicker.DropDownStyle=ComboBoxStyle.DropDownList;pairedPicker.DisplayMember="Name";
         pairedPicker.BackColor=Artwork.Card;pairedPicker.ForeColor=ForeColor;pairedPicker.AccessibleName=Language.T("Windows Bluetooth device to monitor");
         pairedPicker.SelectedIndexChanged+=delegate {BindPairedDevice();};settings.Controls.Add(pairedPicker);
         settings.Controls.Add(new Label {Visible=false,Text=Language.T("Nearby battery broadcast"),ForeColor=Artwork.Muted,Font=new Font("Segoe UI",8),Location=new Point(0,65),AutoSize=true});
@@ -116,6 +116,7 @@ internal sealed class BatteryWindow : Form {
         russianLanguage.Click+=delegate {ChangeLanguage(true,true);};
         englishLanguage.Checked=!Language.Russian;russianLanguage.Checked=Language.Russian;
         tray.BalloonTipClicked+=delegate {if(installedUpdateBalloon)CheckForUpdates(true);else if(updateBalloonUrl!=null)OpenRelease(updateBalloonUrl);};
+        menu.Items.Insert(menu.Items.Count-1,new ToolStripMenuItem(Language.T("Hide widget"),null,delegate {Hide();}));
         tray.ContextMenuStrip=menu; tray.DoubleClick += delegate { Show(); Activate(); };
         FormClosing += delegate(object sender,FormClosingEventArgs e) { if(!quitting && !diagnostic && e.CloseReason==CloseReason.UserClosing) { e.Cancel=true; Hide(); } };
         watcher.ScanningMode=BluetoothLEScanningMode.Passive;
@@ -133,9 +134,16 @@ internal sealed class BatteryWindow : Form {
             RefreshReadings();
             if(diagnostic && (DateTime.UtcNow-started).TotalSeconds>=20) { SaveDiagnostic(); quitting=true; Close(); }
         };
+        settingsMenu=new ToolStripMenuItem(Language.T("Device settings"),null,delegate {SetSettingsVisible(!settingsExpanded);});
+        themeMenu=new ToolStripMenuItem(Language.T(Theme.Dark?"Light mode":"Dark mode"),null,delegate {ChangeTheme(!Theme.Dark,true);});
+        pinMenu=new ToolStripMenuItem(Language.T("Always on top"),null,delegate {TopMost=!TopMost;pinMenu.Checked=TopMost;});
+        menu.Items.Insert(1,settingsMenu);menu.Items.Insert(2,themeMenu);menu.Items.Insert(3,pinMenu);
+        ContextMenuStrip=menu;
+        deviceTitle.MouseDown+=DragWidget;
         var children=new List<Control>();foreach(Control child in Controls)children.Add(child);
-        content.SetBounds(0,0,400,484);content.BackColor=BackColor;
+        content.SetBounds(0,0,264,216);content.BackColor=BackColor;
         foreach(var child in children)content.Controls.Add(child);
+        content.MouseDown+=DragWidget;
         Controls.Add(content);content.Paint+=delegate(object sender,PaintEventArgs e) {DrawArtwork(e);};
         layoutReady=true;Resize+=delegate {ArrangeWindow();};ArrangeWindow();
         Shown += delegate { ArrangeWindow();if(previewMode) return; LoadPairedDevices(); Restart(); timer.Start(); if(diagnostic) Hide(); else CheckForUpdates(false); };
@@ -148,6 +156,7 @@ internal sealed class BatteryWindow : Form {
         Theme.Apply(this,oldCard,oldMuted);
         themeToggle.Text=Language.T(dark?"Light mode":"Dark mode");
         themeToggle.AccessibleName=themeToggle.Text;
+        if(themeMenu!=null)themeMenu.Text=themeToggle.Text;
         tray.ContextMenuStrip.BackColor=Artwork.Card;tray.ContextMenuStrip.ForeColor=Theme.Text;
         tray.ContextMenuStrip.Renderer=new ToolStripProfessionalRenderer(new ThemeMenuColors());
         foreach(ToolStripItem item in tray.ContextMenuStrip.Items)Theme.ApplyMenu(item);
@@ -285,35 +294,44 @@ internal sealed class BatteryWindow : Form {
         RefreshReadings();
     }
     void SetSettingsVisible(bool visible) {
-        float scale=content.Width/400f;
-        int oldHeight=(int)((settingsExpanded?484:412)*scale);
+        float scale=content.Width/264f;
+        int oldHeight=(int)((settingsExpanded?294:216)*scale);
         bool compact=WindowState==FormWindowState.Normal && ClientSize.Height<=oldHeight+1;
         settingsExpanded=visible;
-        settings.Visible=visible;settingsToggle.Text=visible?Language.T("Hide device settings"):Language.T("Device settings");
+        settings.Visible=visible;if(settingsMenu!=null)settingsMenu.Checked=visible;settingsToggle.Text=visible?Language.T("Hide device settings"):Language.T("Device settings");
         ArrangeWindow();
-        if(compact)ClientSize=new Size(ClientSize.Width,(int)((visible?484:412)*scale));
+        if(compact)ClientSize=new Size(ClientSize.Width,(int)((visible?294:216)*scale));
         ArrangeWindow();content.Invalidate();
     }
     void ArrangeWindow() {
         if(!layoutReady || arranging || WindowState==FormWindowState.Minimized)return;
         arranging=true;
         try {
-            int height=(int)((settingsExpanded?484:412)*(content.Width/400f));
+            int height=(int)((settingsExpanded?294:216)*(content.Width/264f));
             content.Height=height;
             MinimumSize=SizeFromClientSize(new Size(content.Width,height));
             content.Location=new Point(Math.Max(0,(ClientSize.Width-content.Width)/2),Math.Max(0,(ClientSize.Height-height)/2));
+            using(var path=Artwork.Round(0,0,ClientSize.Width,ClientSize.Height,22*content.Width/264f)) {var old=Region;Region=new Region(path);if(old!=null)old.Dispose();}
         } finally {arranging=false;}
+    }
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern bool ReleaseCapture();
+    [System.Runtime.InteropServices.DllImport("user32.dll")] static extern IntPtr SendMessage(IntPtr window,int message,IntPtr wParam,IntPtr lParam);
+    void DragWidget(object sender,MouseEventArgs e) {
+        if(e.Button!=MouseButtons.Left)return;
+        ReleaseCapture();SendMessage(Handle,0xA1,new IntPtr(2),IntPtr.Zero);
+    }
+    protected override void WndProc(ref Message m) {
+        base.WndProc(ref m);
+        if(m.Msg==0x84 && (int)m.Result==1) {
+            int x=unchecked((short)((long)m.LParam&0xffff)),y=unchecked((short)(((long)m.LParam>>16)&0xffff));
+            var p=PointToClient(new Point(x,y));int edge=16;
+            if(p.X>=ClientSize.Width-edge && p.Y>=ClientSize.Height-edge)m.Result=new IntPtr(17);
+        }
     }
     void DrawArtwork(PaintEventArgs e) {
         var g=e.Graphics;g.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-        float scale=content.Width/400f;g.ScaleTransform(scale,scale);
-        Artwork.Earbud(g,100,101,90,false);Artwork.Earbud(g,210,101,90,true);
-        for(int i=0;i<2;i++) {
-            int x=24+i*184;
-            Artwork.Box(g,Theme.Shadow,x,216,168,112,20);
-            Artwork.Box(g,Artwork.Card,x,214,168,112,20);
-        }
-        using(var pen=new Pen(Theme.Border))g.DrawLine(pen,24,362,376,362);
+        float scale=content.Width/264f;g.ScaleTransform(scale,scale);
+        if(settingsExpanded)using(var pen=new Pen(Theme.Border))g.DrawLine(pen,16,214,248,214);
     }
     void Dispatch(Action action) { if(!IsDisposed && IsHandleCreated) { try { BeginInvoke(action); } catch(InvalidOperationException) {} } }
     bool VisibleBroadcast(Reading reading) {
@@ -416,15 +434,16 @@ internal sealed class BatteryWindow : Form {
         var r=picker.SelectedItem as Reading;
         if(connection.Connected!=true) r=null;
         deviceTitle.Text=r==null?"AirPods Battery":Models.Names[r.ModelId];
+        int artworkModel=r!=null?r.ModelId:preferredModel.HasValue?preferredModel.Value:0;
         string[] tips={Language.T("L —"),Language.T("R —")};
         for(int i=0;i<2;i++) {
             levels[i]=r==null?-1:r.Level[i]; fresh[i]=false;
-            values[i].Level=levels[i];values[i].Fresh=false;
+            values[i].ModelId=artworkModel;values[i].Level=levels[i];values[i].Fresh=false;values[i].Charging=r!=null && r.Charging[i] && r.Level[i]>=0;
             if(r==null || r.Level[i]<0) {values[i].Text="—"; values[i].ForeColor=ForeColor; ages[i].Text=connection.Connected==false?Language.T("Disconnected"):connection.Connected==null?Language.T("Checking connection"):Language.T("Waiting for data");values[i].Detail=ages[i].Text;values[i].AccessibleDescription=ages[i].Text;values[i].Invalidate();continue;}
             int age=(int)(DateTime.UtcNow-r.Updated[i]).TotalSeconds;
             bool stale=age>60;
             fresh[i]=!stale;
-            values[i].Text=r.Level[i]+"%";values[i].Fresh=!stale;
+            values[i].Text=r.Level[i]+"%";values[i].Fresh=!stale;values[i].Charging=!stale && r.Charging[i];
             values[i].ForeColor=stale?Artwork.Muted:ForeColor;
             ages[i].Text=stale?Language.T("Last known"):r.Charging[i]?Language.T("Charging"):"";
             values[i].Detail=Language.T("Approximately ")+r.Level[i]+"%"+(r.Charging[i]?Language.T(" · charging"):"")+Language.T("\nUpdated ")+(age<60?age+Language.T(" seconds"):(age/60)+Language.T(" minutes"))+Language.T(" ago")+(stale?Language.T(" (last known)"):"");
@@ -438,6 +457,8 @@ internal sealed class BatteryWindow : Form {
             status.Text=connectionError.Length>0?connectionError:connection.Connected==false?Language.T("AirPods disconnected · reconnect in Windows"):pairedPicker.SelectedItem==null?Language.T("Connect your AirPods, or choose them in Device settings"):Language.T("Checking Bluetooth connection…");
             tray.Text=connection.Connected==false?Language.T("AirPods disconnected"):Language.T("AirPods: connection not verified");
         }
+        widgetTip.SetToolTip(status,status.Text);
+        widgetTip.SetToolTip(deviceTitle,deviceTitle.Text+" · "+Language.T("Approximate battery levels"));
         status.ForeColor=connection.Connected==true && error.Length==0?Artwork.Mint:Artwork.Muted;
         Invalidate();
     }
@@ -446,7 +467,7 @@ internal sealed class BatteryWindow : Form {
     }
     protected override void Dispose(bool disposing) {
         if(disposing && pairedDevice!=null) {pairedDevice.ConnectionStatusChanged-=ConnectionChanged;pairedDevice.Dispose();pairedDevice=null;}
-        if(disposing) {timer.Dispose(); watcher.Received-=Received; try {watcher.Stop();} catch {} tray.Visible=false; tray.Dispose();}
+        if(disposing) {widgetTip.Dispose();timer.Dispose(); watcher.Received-=Received; try {watcher.Stop();} catch {} tray.Visible=false; tray.Dispose();}
         base.Dispose(disposing);
     }
     [STAThread] static int Main(string[] args) {
@@ -462,20 +483,37 @@ internal sealed class BatteryWindow : Form {
                 var r=new Reading {Address=1,LastSeen=DateTime.UtcNow,Rssi=-48};r.Level[0]=80;r.Level[1]=70;r.Updated[0]=r.Updated[1]=DateTime.UtcNow;
                 w.devices.Add(1,r);w.picker.Items.Add(r);w.picker.SelectedIndex=0;w.RefreshReadings();
                 w.SetSettingsVisible(false);
+                if(w.ClientSize!=new Size(264,216) || w.FormBorderStyle!=FormBorderStyle.None)throw new Exception("Widget dimensions failed");
+                foreach(var model in Models.Names.Keys)if(WidgetArtwork.Get(model)==null)throw new Exception("Model artwork missing");
+                if(WidgetArtwork.Style(0x0220)!=WidgetArtwork.Style(0x0f20) || WidgetArtwork.Style(0x1320)==WidgetArtwork.Style(0x1920))throw new Exception("Model artwork mapping failed");
+                if(w.Region==null || !w.Region.IsVisible(132,100) || w.Region.IsVisible(0,0))throw new Exception("Rounded widget region failed");
+                w.settingsMenu.PerformClick();if(!w.settingsExpanded || !w.settings.Visible)throw new Exception("Device menu failed");w.settingsMenu.PerformClick();
+                w.pinMenu.PerformClick();if(!w.TopMost || !w.pinMenu.Checked)throw new Exception("Always-on-top menu failed");w.pinMenu.PerformClick();
+                foreach(int model in new [] {0x0220,0x1320,0x1920,Models.TestedModel}) {
+                    r.ModelId=model;w.RefreshReadings();foreach(var gauge in w.values)gauge.FinishAnimation();
+                    using(var modelImage=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(modelImage,new Rectangle(0,0,w.Width,w.Height));modelImage.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"widget-model-"+WidgetArtwork.Style(model)+".png"));}
+                }
+                r.ModelId=Models.TestedModel;w.RefreshReadings();
                 if(w.values[0].Text!="80%" || w.ages[0].Text!="" || !w.values[0].Detail.Contains("Updated")) throw new Exception("Connected display test failed");
+                foreach(var gauge in w.values)gauge.FinishAnimation();
                 using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height));b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"screenshot.png"));}
                 r.Updated[0]=DateTime.UtcNow.AddMinutes(-3);w.RefreshReadings();
                 if(w.ages[0].Text!="Last known" || w.values[0].Fresh || !w.values[0].Detail.Contains("3 minutes"))throw new Exception("Stale reading visibility test failed");
+                foreach(var gauge in w.values)gauge.FinishAnimation();
                 using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height));b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"stale-preview.png"));}
                 w.ChangeTheme(true,false);
-                if(w.BackColor!=Artwork.Background || w.values[0].BackColor!=Artwork.Card || w.themeToggle.Text!="Light mode")throw new Exception("Dark theme did not apply");
+                if(w.BackColor!=Artwork.Background || w.values[0].BackColor!=Artwork.Background || w.themeToggle.Text!="Light mode")throw new Exception("Dark theme did not apply");
+                foreach(var gauge in w.values)gauge.FinishAnimation();
                 using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height));b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"dark-preview.png"));}
                 w.ChangeTheme(false,false);
-                if(w.BackColor!=Artwork.Background || w.values[0].BackColor!=Color.White || w.themeToggle.Text!="Dark mode")throw new Exception("Light theme did not restore");
-                w.SetSettingsVisible(true);if(w.picker.Visible || w.showAllModels.Visible)throw new Exception("Technical broadcast controls are visible");if(!w.settings.Visible || w.ClientSize.Height<=412)throw new Exception("Settings expansion failed");
+                if(w.BackColor!=Artwork.Background || w.values[0].BackColor!=Artwork.Background || w.themeToggle.Text!="Dark mode")throw new Exception("Light theme did not restore");
+                w.SetSettingsVisible(true);if(w.picker.Visible || w.showAllModels.Visible)throw new Exception("Technical broadcast controls are visible");if(!w.settings.Visible || w.ClientSize.Height<=216)throw new Exception("Settings expansion failed");
                 w.SetSettingsVisible(false);
+                r.Updated[0]=DateTime.UtcNow;r.Charging[0]=true;w.RefreshReadings();
+                if(!w.values[0].Charging)throw new Exception("Charging ring missing");
                 w.SetConnected(false);
-                if(w.values[0].Text!="—" || w.values[1].Text!="—" || w.levels[0]!=-1 || w.levels[1]!=-1 || r.Level[0]!=-1 || w.tray.Text!="AirPods disconnected") throw new Exception("Disconnect clearing test failed");
+                if(w.values[0].Text!="—" || w.values[1].Text!="—" || w.levels[0]!=-1 || w.levels[1]!=-1 || r.Level[0]!=-1 || w.values[0].Charging || w.values[1].Charging || w.tray.Text!="AirPods disconnected") throw new Exception("Disconnect clearing test failed");
+                foreach(var gauge in w.values)gauge.FinishAnimation();
                 using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height));b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"disconnected-preview.png"));}
                 w.SetConnected(true); if(w.values[0].Text!="—") throw new Exception("Reconnect reused cached battery");
                 w.SetConnected(null); if(w.values[0].Text!="—") throw new Exception("Unknown connection leaked reading");
@@ -514,19 +552,21 @@ internal sealed class BatteryWindow : Form {
                 if(w.picker.SelectedItem!=null)throw new Exception("Stale candidate selected automatically");
                 w.SetSettingsVisible(true);
                 w.ClientSize=new Size(800,800);Application.DoEvents();
-                if(w.content.Left!=200 || w.content.Top!=158 || w.content.Right>w.ClientSize.Width || w.content.Bottom>w.ClientSize.Height)throw new Exception("Resized layout not centered");
+                if(w.content.Left!=268 || w.content.Top!=253 || w.content.Right>w.ClientSize.Width || w.content.Bottom>w.ClientSize.Height)throw new Exception("Resized layout not centered");
                 w.SetSettingsVisible(false);
-                if(w.ClientSize.Height!=800 || w.content.Height!=412 || w.content.Top!=194)throw new Exception("Settings toggle lost user window size");
+                if(w.ClientSize.Height!=800 || w.content.Height!=216 || w.content.Top!=292)throw new Exception("Settings toggle lost user window size");
                 w.SetSettingsVisible(true);
+                foreach(var gauge in w.values)gauge.FinishAnimation();
                 using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height));b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"resized-preview.png"));}
                 w.WindowState=FormWindowState.Maximized;Application.DoEvents();w.SetSettingsVisible(false);
                 if(w.WindowState!=FormWindowState.Maximized || w.content.Right>w.ClientSize.Width || w.content.Bottom>w.ClientSize.Height)throw new Exception("Maximized settings layout failed");
-                w.WindowState=FormWindowState.Normal;w.SetSettingsVisible(true);w.ClientSize=new Size(400,484);Application.DoEvents();
+                w.WindowState=FormWindowState.Normal;w.SetSettingsVisible(true);w.ClientSize=new Size(264,216);Application.DoEvents();
                 current.Level[0]=70;current.LastSeen=current.Updated[0]=DateTime.UtcNow;w.picker.SelectedItem=current;
                 w.ChangeLanguage(true,false);
                 if(w.themeToggle.Text!="Тёмная тема")throw new Exception("Russian theme label failed");
                 if(w.picker.SelectedItem!=current || w.values[0].Text!="70%" || !w.values[0].Detail.Contains("Обновлено") || w.settingsToggle.Text!="Скрыть настройки устройств" || w.tray.ContextMenuStrip.Items[0].Text!="Показать заряд")throw new Exception("Russian language switch failed");
                 if(!current.SeenLabel(DateTime.UtcNow).StartsWith("Сигнал") || !Models.Label(0x0220).Contains("экспериментально"))throw new Exception("Russian broadcast labels failed");
+                foreach(var gauge in w.values)gauge.FinishAnimation();
                 using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height));b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"russian-preview.png"));}
                 w.SetConnected(false);
                 if(w.ages[0].Text!="Отключено" || w.tray.Text!="AirPods отключены")throw new Exception("Russian disconnect state failed");
@@ -536,13 +576,15 @@ internal sealed class BatteryWindow : Form {
                     w.Scale(new SizeF(factor,factor));w.ArrangeWindow();Application.DoEvents();
                     if(w.settings.Bottom>w.ClientSize.Height || w.values[1].Right>w.ClientSize.Width)throw new Exception("Scaled layout clipped");
                 }
+                foreach(var gauge in w.values)gauge.FinishAnimation();
                 using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height));b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"scaled-settings-preview.png"));}
-                File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"ui-tests.txt"),"Battery icon display, fresh hover timestamps, stale labels, settings toggle, disconnect clearing, reconnect cache reset, unknown state, broadcast expiry, and selection preservation passed.");w.Close();
+                File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"ui-tests.txt"),"Widget rings and model assets, menu controls, rounded layout, resizing/DPI, fresh hover timestamps, charging, stale labels, disconnect clearing, reconnect cache reset, unknown state, broadcast expiry, and selection preservation passed.");w.Close();
             } return 0;
         }
         if(args.Length>0 && args[0]=="--preview") {
             previewMode=true;
-            using(var w=new BatteryWindow(true)) { w.Show(); Application.DoEvents(); using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height)); b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"preview.png"));} w.Close(); } return 0;
+            using(var w=new BatteryWindow(true)) { w.Show(); Application.DoEvents(); foreach(var gauge in w.values)gauge.FinishAnimation();
+                using(var b=new Bitmap(w.Width,w.Height)) {w.DrawToBitmap(b,new Rectangle(0,0,b.Width,b.Height)); b.Save(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"preview.png"));} w.Close(); } return 0;
         }
         try {
             // Diagnostic/test runs remain independent of the user's normal app.

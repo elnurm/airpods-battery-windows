@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.4 — Battery-ring widget
+
+- Replace the large window with a draggable 264 × 216 battery-ring widget, optional device settings, and a shared widget/tray menu.
+- Embed model-specific artwork for AirPods 1/2, 3, 4, and Pro, with a generic fallback until a model is known.
+- Animate connection, battery updates, hover tilt, and fresh charging indicators; stop animation when hidden and respect Windows animation preferences.
+- Keep left/right freshness, disconnect clearing, language switching, theme selection, and update controls.
+- Remove battery hover popups; reading details remain available to screen readers.
+
 ## 0.3.3 — Compact design, themes and automatic discovery
 
 - Add a saved light/dark theme switch with English and Russian labels.

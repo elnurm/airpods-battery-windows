@@ -1,13 +1,13 @@
-# 0.3.3 — Compact design, themes and automatic discovery
+# 0.3.4 — Battery-ring widget
 
-A smaller window, saved light/dark themes, and simpler device setup.
+A compact desktop widget replaces the larger battery window.
 
-- Switch between light and dark mode at the bottom of the window. The app remembers your choice; English and Russian labels are included.
-- More compact battery cards and earbud illustrations, with readable percentages and a resizable window.
-- Automatically select a uniquely connected AirPods device and discover battery data in the background. Broadcast selection and model-filter controls are no longer shown.
-- Recover automatically after battery signal addresses change. When several matching signals are nearby, clear the automatic selection and wait instead of guessing.
-- Refresh English and Russian setup instructions and screenshots.
+- Two battery rings in a rounded 264 × 216 widget, with matching artwork for AirPods 1/2, 3, 4, and Pro. The model is selected automatically when a supported battery signal is identified.
+- Smooth connection and battery-ring animations, hover tilt, and a subtle charging pulse. Animations respect the Windows animation setting and stop when the widget is hidden.
+- Drag the header to move the widget; resize from the lower-right edge. Use the ⋯ menu for device settings, light/dark mode, always-on-top, scanning, languages, updates, hiding, and exit.
+- Remove battery hover popups for a cleaner interface. Stale readings and disconnection remain visible, and detailed readings remain available to screen readers.
+- Refresh English/Russian README screenshots and usage instructions.
 
-**Download:** run **AirPodsBatteryDesktop-win-Setup.exe**. Existing installed users can use **Check for updates**, download the update, and confirm a restart. Users on 0.3.0/0.3.1 with failing update checks should run this installer once; the TLS fix from 0.3.2 is included. Portable ZIP users also need this installer once.
+**Download:** run **AirPodsBatteryDesktop-win-Setup.exe**. Installed users can choose **Check for updates**, download the update, and confirm a restart. Older portable ZIP users need to run the installer once. If update checks fail on 0.3.0/0.3.1, install this version manually once; the TLS fix is included.
 
-Battery readings remain approximate 10% steps. AirPods Pro 3 is tested; other recognized models are experimental. Bluetooth battery signals cannot authenticate ownership, even when only one matches. This remains an unsigned installer.
+Battery readings remain approximate 10% steps. AirPods Pro 3 is tested; other recognized models are experimental. The new artwork does not add model compatibility or 1% battery support. This remains an unsigned preview installer.

@@ -14,8 +14,9 @@ $dependencies = @("$projectRoot\build\dependencies\velopack\lib\net472\Velopack.
 $references += $dependencies | ForEach-Object { '/r:' + $_ }
 if (!(Test-Path "$framework\csc.exe") -or !(Test-Path "$metadata\Windows.Devices.winmd")) { throw 'Build requires 64-bit Windows with .NET Framework and Windows WinMetadata.' }
 $sources = @(Get-ChildItem (Join-Path $projectRoot 'src') -Filter '*.cs' | ForEach-Object FullName)
+$artResources = @(Get-ChildItem (Join-Path $projectRoot 'assets\earbuds') -Filter '*.png' | ForEach-Object { '/resource:' + $_.FullName + ',Earbuds.' + $_.BaseName })
 $icon = Join-Path $projectRoot 'assets\AirPods.ico'
-& "$framework\csc.exe" /nologo /target:winexe /platform:x64 /optimize+ "/out:$output\AirPods.exe" "/win32icon:$icon" $references $sources
+& "$framework\csc.exe" /nologo /target:winexe /platform:x64 /optimize+ "/out:$output\AirPods.exe" "/win32icon:$icon" $references $artResources $sources
 if ($LASTEXITCODE -ne 0) { throw 'Compilation failed. Close the running build before rebuilding.' }
 Copy-Item -LiteralPath $icon -Destination $output
 Copy-Item -LiteralPath "$projectRoot\src\AirPods.exe.config" -Destination $output -Force

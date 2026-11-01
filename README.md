@@ -24,8 +24,8 @@
 <table align="center">
   <tr><th>English</th><th>Русский</th></tr>
   <tr>
-    <td><img src="docs/screenshot.png" width="360" alt="AirPods Battery in English with sample battery readings"></td>
-    <td><img src="docs/screenshot-ru.png" width="360" alt="AirPods Battery на русском языке с примером уровня заряда"></td>
+    <td><img src="docs/screenshot.png" width="264" alt="AirPods Battery in English with sample battery readings"></td>
+    <td><img src="docs/screenshot-ru.png" width="264" alt="AirPods Battery на русском языке с примером уровня заряда"></td>
   </tr>
 </table>
 
@@ -34,8 +34,8 @@
 ## Features
 
 - Separate left and right earbud battery estimates and charging indicators.
-- Light Companion window, iPhone-style battery indicators, and a matching tray icon.
-- Resizable window with maximize support, centered content, and a minimum size that keeps controls visible.
+- Compact battery-ring widget with model-specific AirPods illustrations, light/dark themes, and a matching tray icon.
+- Drag the header to position the widget; resize from its lower-right edge. Optional always-on-top mode is in the menu.
 - Single instance per Windows user session: launching the app again shows the existing window instead of adding another tray icon.
 - English and Russian interface. Right-click the tray icon → **Language / Язык** → **English** or **Русский** to switch immediately. Your choice is saved; on first launch the app uses Russian for a Russian Windows UI language, otherwise English.
 - Clears percentages when the selected Windows Bluetooth device disconnects.
@@ -51,9 +51,9 @@ Get **AirPodsBatteryDesktop-win-Setup.exe** from [GitHub Releases](https://githu
 2. Pair and connect your AirPods using Windows Bluetooth settings.
 3. The app automatically selects a uniquely connected device named AirPods. For renamed devices or multiple connected pairs, choose your headphones under **Device settings → Windows Bluetooth device**.
 4. Battery discovery runs automatically in the background. Keep your AirPods near the PC; opening the case can help discovery.
-5. Close the window to keep it in the tray. Double-click the tray icon to reopen it; right-click → **Exit** to quit.
+5. Open **⋯ → Hide widget** to keep it in the tray. Double-click the tray icon to reopen it; choose **Exit** in the menu to quit.
 
-Use **Dark mode / Light mode** at the bottom of the window to switch appearance. Your choice is saved for the next launch.
+Use **⋯ → Dark mode / Light mode** to switch appearance. Your choice is saved for the next launch. Device settings, rescan, updates, and language are also available in this menu. Battery rings animate when readings change; charging pulses and hover motion respect the Windows animation preference.
 
 Exit any previous copy before opening a new version. The release is unsigned; code signing is not included in this early community release.
 
@@ -85,7 +85,7 @@ Using an experimental model? [Report whether it works](https://github.com/elnurm
 
 
 
-**Old readings:** while Windows still reports a connection, a missing signal means missing battery data, not a disconnect. Readings older than 60 seconds are muted and labeled Last known. Their age is available on hover or keyboard focus. After two minutes without a supported battery signal, the entry expires and the display clears while automatic discovery continues.
+**Old readings:** while Windows still reports a connection, a missing signal means missing battery data, not a disconnect. Readings older than 60 seconds are muted and labeled Last known. Reading details remain available to screen readers. After two minutes without a supported battery signal, the entry expires and the display clears while automatic discovery continues.
 
 ## Troubleshooting
 

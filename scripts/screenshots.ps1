@@ -29,6 +29,8 @@ try {
     $windowType.GetMethod('SetSettingsVisible', $privateInstance).Invoke($window, [object[]]@($false)) | Out-Null
     foreach ($russian in @($false, $true)) {
         $windowType.GetMethod('ChangeLanguage', $privateInstance).Invoke($window, [object[]]@($russian, $false)) | Out-Null
+        $gauges = $windowType.GetField('values', $privateInstance).GetValue($window)
+        foreach ($gauge in $gauges) { $gauge.GetType().GetMethod('FinishAnimation').Invoke($gauge,@()) | Out-Null }
         $window.ActiveControl = $null
         [System.Windows.Forms.Application]::DoEvents()
         $bitmap = New-Object System.Drawing.Bitmap($window.Width, $window.Height)
