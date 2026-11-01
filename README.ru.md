@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/elnurm/airpods-battery-windows/actions/workflows/build.yml"><img src="https://github.com/elnurm/airpods-battery-windows/actions/workflows/build.yml/badge.svg?branch=main" alt="Сборка и тесты Windows"></a>
   <a href="https://github.com/elnurm/airpods-battery-windows/releases"><img src="https://img.shields.io/github/v/release/elnurm/airpods-battery-windows?include_prereleases&amp;sort=semver&amp;label=release" alt="Последняя версия, включая предварительные выпуски"></a>
-  <a href="https://github.com/elnurm/airpods-battery-windows/releases"><img src="https://img.shields.io/github/downloads/elnurm/airpods-battery-windows/AirPodsBatteryDesktop-win-Setup.exe/total?label=downloads&amp;displayAssetName=false" alt="Загрузки установщика во всех выпусках"></a>
+  <a href="https://github.com/elnurm/airpods-battery-windows/releases"><img src="https://img.shields.io/github/downloads/elnurm/airpods-battery-windows/AirPodsBatteryDesktop-win-Setup.exe?label=downloads&amp;displayAssetName=false" alt="Загрузки установщика во всех выпусках"></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen" alt="Предложения изменений приветствуются"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="Лицензия MIT"></a>
 </p>
