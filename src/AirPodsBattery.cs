@@ -383,11 +383,17 @@ internal sealed class BatteryWindow : Form {
         if(picker.SelectedItem!=null && !automaticSelection) return;
         Reading only=null;int matches=0;
         foreach(var r in devices.Values) {
-            if(MatchesSelectedDevice(r) && !r.IsExpired(now)) {only=r;matches++;}
+            // Discovery activity is separate from the two-minute display cache.
+            // Retired private addresses and entries with no post-reconnect
+            // battery data must not block a newly active source.
+            double age=(now-r.LastSeen).TotalSeconds;
+            if(MatchesSelectedDevice(r) && age>=0 && age<=15 && (r.Level[0]>=0 || r.Level[1]>=0)) {only=r;matches++;}
         }
         if(matches!=1) {
             automaticCandidate=null;
-            if(automaticSelection) {picker.SelectedIndex=-1;automaticSelection=false;broadcastExpired=true;}
+            // A quiet scan alone is not evidence of a different pair. Keep the
+            // selected reading until its ordinary freshness/expiry rules apply.
+            if(matches>1 && automaticSelection) {picker.SelectedIndex=-1;automaticSelection=false;broadcastExpired=true;}
             return;
         }
         if(picker.SelectedItem==only)return;
@@ -433,7 +439,7 @@ internal sealed class BatteryWindow : Form {
     void RefreshReadings() {
         var r=picker.SelectedItem as Reading;
         if(connection.Connected!=true) r=null;
-        deviceTitle.Text=r==null?"AirPods Battery":Models.Names[r.ModelId];
+        deviceTitle.Text=r!=null?Models.Names[r.ModelId]:preferredModel.HasValue?Models.Names[preferredModel.Value]:"AirPods Battery";
         int artworkModel=r!=null?r.ModelId:preferredModel.HasValue?preferredModel.Value:0;
         string[] tips={Language.T("L —"),Language.T("R —")};
         for(int i=0;i<2;i++) {
@@ -452,7 +458,7 @@ internal sealed class BatteryWindow : Form {
         }
         tray.Text=r==null?Language.T("AirPods: waiting for battery data"):string.Join(" | ",tips);
         status.Text=error.Length>0?error:(r==null?(devices.Count==0?Language.T("Searching for your AirPods…"):Language.T("Waiting for battery data…")):(fresh[0]||fresh[1]?Language.T("●  Connected to this PC"):Language.T("Waiting for battery data…")));
-        if(broadcastExpired && connection.Connected==true && error.Length==0)status.Text=Language.T("Waiting for a clear battery signal… Keep your AirPods near this PC.");
+        if(broadcastExpired && connection.Connected==true && error.Length==0)status.Text=Language.T("Waiting for battery data…");
         if(connection.Connected!=true) {
             status.Text=connectionError.Length>0?connectionError:connection.Connected==false?Language.T("AirPods disconnected · reconnect in Windows"):pairedPicker.SelectedItem==null?Language.T("Connect your AirPods, or choose them in Device settings"):Language.T("Checking Bluetooth connection…");
             tray.Text=connection.Connected==false?Language.T("AirPods disconnected"):Language.T("AirPods: connection not verified");
@@ -535,6 +541,7 @@ internal sealed class BatteryWindow : Form {
                 w.TryAutomaticSelection(now.AddSeconds(6));
                 if(w.picker.SelectedItem!=current || w.values[0].Text!="70%" || w.settings.Visible)throw new Exception("Unique model not selected automatically");
                 var other=new Reading {Address=4,LastSeen=now,ModelId=current.ModelId};
+                other.Level[0]=50;other.Updated[0]=now;
                 w.devices.Add(4,other);w.picker.Items.Add(other);w.TryAutomaticSelection(now.AddSeconds(7));
                 if(w.picker.SelectedItem!=null || w.values[0].Text!="—")throw new Exception("Ambiguous automatic selection retained");
                 other.ModelId=0x0220;
@@ -550,6 +557,26 @@ internal sealed class BatteryWindow : Form {
                 w.picker.SelectedIndex=-1;w.automaticSelection=false;w.automaticCandidate=null;current.LastSeen=now.AddSeconds(-60);
                 w.TryAutomaticSelection(now);w.TryAutomaticSelection(now.AddSeconds(6));
                 if(w.picker.SelectedItem!=null)throw new Exception("Stale candidate selected automatically");
+                // A rotated address recovers without waiting for the old 120s cache entry.
+                w.picker.SelectedItem=current;w.automaticSelection=true;current.LastSeen=now;
+                var rotated=new Reading {Address=5,ModelId=current.ModelId,LastSeen=now.AddSeconds(20)};
+                rotated.Level[0]=60;rotated.Updated[0]=now.AddSeconds(20);
+                w.devices.Add(5,rotated);w.picker.Items.Add(rotated);
+                w.TryAutomaticSelection(now.AddSeconds(20));
+                if(w.picker.SelectedItem!=current)throw new Exception("Address rotation skipped observation period");
+                rotated.LastSeen=now.AddSeconds(26);w.TryAutomaticSelection(now.AddSeconds(26));
+                if(w.picker.SelectedItem!=rotated || w.values[0].Text!="60%" || !w.devices.ContainsKey(current.Address))throw new Exception("Retired address blocked recovery");
+                w.TryAutomaticSelection(now.AddSeconds(50));
+                if(w.picker.SelectedItem!=rotated)throw new Exception("Quiet scan prematurely cleared current readings");
+                var empty=new Reading {Address=6,ModelId=current.ModelId,LastSeen=now.AddSeconds(51)};
+                w.devices.Add(6,empty);w.picker.Items.Add(empty);
+                rotated.LastSeen=now.AddSeconds(51);w.TryAutomaticSelection(now.AddSeconds(51));
+                if(w.picker.SelectedItem!=rotated)throw new Exception("Empty post-reconnect candidate blocked selection");
+                w.SetConnected(false);w.TryAutomaticSelection(now.AddSeconds(52));
+                if(w.values[0].Text!="—" || rotated.Level[0]!=-1)throw new Exception("Discovery recovery leaked battery while disconnected");
+                w.SetConnected(true);w.TryAutomaticSelection(now.AddSeconds(53));w.TryAutomaticSelection(now.AddSeconds(59));
+                if(w.values[0].Text!="—")throw new Exception("Reconnect reused pre-disconnect levels");
+                w.devices.Remove(5);w.picker.Items.Remove(rotated);w.devices.Remove(6);w.picker.Items.Remove(empty);
                 w.SetSettingsVisible(true);
                 w.ClientSize=new Size(800,800);Application.DoEvents();
                 if(w.content.Left!=268 || w.content.Top!=253 || w.content.Right>w.ClientSize.Width || w.content.Bottom>w.ClientSize.Height)throw new Exception("Resized layout not centered");

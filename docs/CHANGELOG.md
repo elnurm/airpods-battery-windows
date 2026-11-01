@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.5 — Battery signal recovery
+
+- Separate the 15-second discovery activity window from the 120-second reading cache so retired BLE addresses do not block automatic recovery.
+- Ignore candidates with no usable post-reconnect battery levels; preserve selected readings during quiet scans while retaining normal stale/expiry handling.
+- Keep the detected model title while waiting and shorten the waiting message to fit the widget.
+
 ## 0.3.4 — Battery-ring widget
 
 - Replace the large window with a draggable 264 × 216 battery-ring widget, optional device settings, and a shared widget/tray menu.
